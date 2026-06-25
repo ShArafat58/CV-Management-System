@@ -1,10 +1,26 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Layout } from "./components/Layout";
+import { Home } from "./pages/Home";
+import { Positions } from "./pages/Positions";
+import { Profile } from "./pages/Profile";
+import { MyCvs } from "./pages/MyCvs";
+import { Search } from "./pages/Search";
+import { NotFound } from "./pages/NotFound";
+
 function App() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <h1 className="text-4xl font-bold text-slate-800">
-        CV Management System — Hello World
-      </h1>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="positions" element={<Positions />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="my-cvs" element={<MyCvs />} />
+          <Route path="search" element={<Search />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 

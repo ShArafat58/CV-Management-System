@@ -1,0 +1,14 @@
+{
+  "app.title": "সিভি ম্যানেজমেন্ট",
+  "nav.home": "হোম",
+  "nav.positions": "পদসমূহ",
+  "nav.profile": "প্রোফাইল",
+  "nav.myCvs": "আমার সিভি",
+  "auth.login": "লগইন",
+  "auth.loginGoogle": "গুগল দিয়ে চালিয়ে যান",
+  "auth.loginGithub": "গিটহাব দিয়ে চালিয়ে যান",
+  "auth.logout": "লগআউট",
+  "search.placeholder": "খুঁজুন...",
+  "theme.toggle": "থিম পরিবর্তন",
+  "lang.toggle": "ভাষা পরিবর্তন"
+}

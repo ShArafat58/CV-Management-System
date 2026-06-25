@@ -1,0 +1,14 @@
+{
+  "app.title": "CV Management",
+  "nav.home": "Home",
+  "nav.positions": "Positions",
+  "nav.profile": "Profile",
+  "nav.myCvs": "My CVs",
+  "auth.login": "Login",
+  "auth.loginGoogle": "Continue with Google",
+  "auth.loginGithub": "Continue with GitHub",
+  "auth.logout": "Logout",
+  "search.placeholder": "Search...",
+  "theme.toggle": "Toggle Theme",
+  "lang.toggle": "Toggle Language"
+}

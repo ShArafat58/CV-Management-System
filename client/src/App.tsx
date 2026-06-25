@@ -6,6 +6,7 @@ import { Profile } from "./pages/Profile";
 import { MyCvs } from "./pages/MyCvs";
 import { Search } from "./pages/Search";
 import { NotFound } from "./pages/NotFound";
+import { AttributeLibrary } from "./pages/AttributeLibrary";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="positions" element={<Positions />} />
           <Route path="profile" element={<Profile />} />
           <Route path="my-cvs" element={<MyCvs />} />
+          <Route path="attributes" element={<AttributeLibrary />} />
           <Route path="search" element={<Search />} />
           <Route path="*" element={<NotFound />} />
         </Route>

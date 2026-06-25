@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CANDIDATE
+  RECRUITER
+  ADMIN
+}
+
+enum AttributeCategory {
+  CERTIFICATION
+  DOMAIN_KNOWLEDGE
+  PERSONAL_INFORMATION
+  SOFT_SKILLS
+}
+
+enum AttributeDataType {
+  STRING
+  TEXT
+  IMAGE
+  NUMERIC
+  DATE
+  PERIOD
+  BOOLEAN
+  ONE_OF_MANY
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  displayName   String
+  provider      String
+  providerId    String
+  role          Role      @default(CANDIDATE)
+  blocked       Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+
+  profile       Profile?
+  cvs           Cv[]
+  posts         Post[]
+  likes         Like[]
+
+  @@unique([provider, providerId])
+}
+
+model Profile {
+  id         String           @id @default(uuid())
+  userId     String           @unique
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  version    Int              @default(1)
+  updatedAt  DateTime         @updatedAt
+
+  values     AttributeValue[]
+  projects   Project[]
+}
+
+model Attribute {
+  id          String              @id @default(uuid())
+  name        String              @unique
+  category    AttributeCategory
+  dataType    AttributeDataType
+  options     String[]            @default([])
+  createdAt   DateTime            @default(now())
+
+  values         AttributeValue[]
+  positionAttrs  PositionAttribute[]
+}
+
+model AttributeValue {
+  id           String     @id @default(uuid())
+  profileId    String
+  profile      Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  attributeId  String
+  attribute    Attribute  @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  value        String
+
+  @@unique([profileId, attributeId])
+}
+
+model Project {
+  id           String    @id @default(uuid())
+  profileId    String
+  profile      Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name         String
+  startDate    DateTime?
+  endDate      DateTime?
+  description  String    @default("")
+  tags         String[]  @default([])
+  createdAt    DateTime  @default(now())
+}
+
+model Position {
+  id                String              @id @default(uuid())
+  title             String
+  shortDescription  String              @default("")
+  isPublic          Boolean             @default(true)
+  accessRules       Json                @default("[]")
+  maxProjects       Int                 @default(3)
+  projectTags       String[]            @default([])
+  version           Int                 @default(1)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  attributes        PositionAttribute[]
+  cvs               Cv[]
+  posts             Post[]
+}
+
+model PositionAttribute {
+  id           String     @id @default(uuid())
+  positionId   String
+  position     Position   @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  attributeId  String
+  attribute    Attribute  @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  sortOrder    Int        @default(0)
+
+  @@unique([positionId, attributeId])
+}
+
+model Cv {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  positionId   String
+  position     Position  @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  hidden       Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  likes        Like[]
+
+  @@unique([userId, positionId])
+}
+
+model Post {
+  id           String    @id @default(uuid())
+  positionId   String
+  position     Position  @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  authorId     String
+  author       User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content      String
+  createdAt    DateTime  @default(now())
+}
+
+model Like {
+  id           String    @id @default(uuid())
+  cvId         String
+  cv           Cv        @relation(fields: [cvId], references: [id], onDelete: Cascade)
+  recruiterId  String
+  recruiter    User      @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+
+  @@unique([cvId, recruiterId])
+}

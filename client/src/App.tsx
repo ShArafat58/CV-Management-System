@@ -6,6 +6,7 @@ import { Profile } from "./pages/Profile";
 import { MyCvs } from "./pages/MyCvs";
 import { Search } from "./pages/Search";
 import { NotFound } from "./pages/NotFound";
+import { CvView } from "./pages/CvView";
 import { AttributeLibrary } from "./pages/AttributeLibrary";
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
           <Route path="positions" element={<Positions />} />
           <Route path="profile" element={<Profile />} />
           <Route path="my-cvs" element={<MyCvs />} />
+          <Route path="cvs/:id" element={<CvView />} />
           <Route path="attributes" element={<AttributeLibrary />} />
           <Route path="search" element={<Search />} />
           <Route path="*" element={<NotFound />} />

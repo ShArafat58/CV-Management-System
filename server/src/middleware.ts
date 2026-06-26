@@ -1,4 +1,19 @@
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
+
+declare global {
+    namespace Express {
+        interface User {
+            id: string;
+            email: string;
+            displayName: string;
+            provider: string;
+            providerId: string;
+            role: "CANDIDATE" | "RECRUITER" | "ADMIN";
+            blocked: boolean;
+            createdAt: Date;
+        }
+    }
+}
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
     if (req.isAuthenticated && req.isAuthenticated()) {

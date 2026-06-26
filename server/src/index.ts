@@ -7,6 +7,7 @@ import passport from "./auth.js";
 import authRoutes from "./authRoutes.js";
 import attributeRoutes from "./attributeRoutes.js";
 import profileRoutes from "./profileRoutes.js";
+import positionRoutes from "./positionRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,6 +35,7 @@ app.use(passport.session());
 app.use("/api/auth", authRoutes);
 app.use("/api/attributes", attributeRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/positions", positionRoutes);
 
 app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", message: "Hello from the server" });

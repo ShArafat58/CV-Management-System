@@ -20,9 +20,11 @@
 | Realtime | Socket.IO (later, Step 9) | For discussions |
 | Deploy | Render (single web service) | Server serves the built client |
 
+**Key libraries added:** axios, react-router-dom, react-i18next, lucide-react, react-markdown, react-tag-autocomplete, date-fns
+
 ---
 
-## DONE (Step 1-5)
+## DONE (Step 1-6)
 
 ### Step 1 — Scaffold + Hello World Deploy
 - Monorepo: `client/` (React+Vite+TS) + `server/` (Express+TS)
@@ -51,6 +53,7 @@
 - `server/src/middleware.ts` -> `requireAuth` and `requireRole(...roles)`, both check for blocked users
 - 3 roles: CANDIDATE (default), RECRUITER, ADMIN
 - Tested locally: both providers login + /me + protected route
+- NOTE: sessions are in-memory, so a server restart logs everyone out (fine for dev)
 
 ### Step 4 — App Shell (frontend structure)
 - `client/src/lib/api.ts` -> axios instance (`baseURL: /api`, `withCredentials: true`)
@@ -61,7 +64,7 @@
 - i18n (react-i18next) -> English (default) + Bengali, language remembered in localStorage
 - `Header` -> logo, nav links, full-text search box (UI ready, wired later), theme toggle, language toggle, login dropdown (Google/GitHub), logout
 - `Layout` -> Header + `<Outlet/>`, responsive, light+dark
-- Routing (react-router) -> Home, Positions, Profile, MyCvs, Search, NotFound
+- Routing (react-router) -> Home, Positions, Profile, MyCvs, Search, NotFound, Attributes
 - Removed gradient for clean sky-blue (to match Pavel's taste)
 - Tested full login flow from the frontend
 
@@ -72,24 +75,35 @@
   - POST/PUT/DELETE -> RECRUITER+ADMIN only (`requireRole`)
   - Validation: unique name, category/dataType enum check, ONE_OF_MANY requires non-empty options
   - Errors: duplicate -> 409, not found -> 404
+  - DELETE blocks built-in attributes (403) — added in Step 6
 - **Frontend** `client/src/pages/AttributeLibrary.tsx` + `components/attributes/`:
   - **Table view** (not gallery/tiles — requirement)
-  - **No buttons in rows** — instead checkbox select + toolbar above (requirement, else -20%)
+  - **No buttons in rows** — checkbox select + toolbar above (requirement, else -20%)
   - Toolbar: 0 selected -> New; 1 selected -> Edit+Delete; >1 -> Delete
   - Modal form (create/edit), shows options editor when ONE_OF_MANY
   - Search (debounced) + category filter
   - Role check: candidates see read-only, toolbar hidden
 - Tested: create, edit, delete, prefix search, category filter, duplicate (409)
 
+### Step 6 — Personal Profile
+- **Schema change:** added `isBuiltIn Boolean @default(false)` to Attribute (migration `add_builtin_flag`)
+- **Seed** `server/prisma/seed.ts` -> 4 built-in attributes (First Name, Last Name, Location, Personal Photo) using `upsert` (safe to re-run). Run with `npx tsx prisma/seed.ts`
+- **Backend** `server/src/profileRoutes.ts` (mounted at `/api/profile`, all requireAuth, own profile only except ADMIN can pass userId):
+  - GET `/` -> full profile (values + attribute info + projects) + builtInAttributes list; creates empty profile if missing; uses include/select (no SELECT *)
+  - PUT `/values` -> **auto-save with optimistic locking**: checks body.version against profile.version inside a `$transaction`; on mismatch returns 409 `version_conflict` + currentVersion and saves nothing; on match upserts values and increments version
+  - POST/PUT/DELETE `/projects` -> project CRUD with ownership check
+  - GET `/project-tags` -> distinct sorted tags for autocomplete (no query inside loop)
+- **Frontend** `client/src/pages/Profile.tsx` + `components/profile/ProjectsTab.tsx`:
+  - 3 tabs: Me (built-in attrs), Info (library attrs + add-attribute picker), Projects
+  - ProfileField component renders the right input per dataType (text/textarea/number/date/checkbox/select)
+  - **Auto-save:** debounced ~2s after typing stops (NOT every keystroke); shows "Saving..."/"Saved" indicator
+  - **Conflict handling:** on 409, shows a red non-dismissible banner with a Reload button; auto-save halts until reload
+  - **Projects:** table view + selection toolbar (no row buttons), modal with date range, markdown description (react-markdown live preview), tag autocomplete (react-tag-autocomplete, suggestions from /project-tags)
+- Tested: auto-save persists after refresh, optimistic locking, project create/edit/delete, markdown preview, tags
+
 ---
 
-## REMAINING (Step 6-12)
-
-### Step 6 — Personal Profile
-- 4 sections: Me (built-in attrs like name/photo), Info (library attrs), Projects, CVs
-- Projects: name, period, Markdown description, technology tags (autocomplete)
-- **Auto-save** every 5-10 seconds (not on every keystroke)
-- **Optimistic locking** (send version number, fail on mismatch)
+## REMAINING (Step 7-12)
 
 ### Step 7 — Killer Feature #2: Positions
 - Recruiter creates/duplicates/edits/deletes positions (shared, no ownership)
@@ -147,10 +161,12 @@
 - Git: `git status` -> `git add .` -> `git commit` -> `git push origin main` (Windows/PowerShell)
 - `.env` is never pushed (in gitignore) — credentials stay secret
 - Prisma commands always run from the `server/` folder
-- Two terminals: one for server (`npm run dev`), one for client
+- Two terminals: one for server (`npm run dev`), one for client (`npm run dev`)
 - Build UI with the Antigravity agent, but verify every part (for defense)
+- If agent imports a library, make sure it's installed (`npm install <lib>`) or Vite throws "Failed to resolve import"
+- Watch import paths from the agent (e.g. `../../../lib/api` vs `../../lib/api`)
 - Render free instance sleeps when idle, first load takes 30-50 seconds
 
 ---
 
-*Last updated: Step 5 (Attribute Library) complete. Next: Step 6 (Profile) or live deploy update.*
+*Last updated: Step 6 (Personal Profile) complete. 6/12 done. Next: live deploy update OR Step 7 (Positions).*

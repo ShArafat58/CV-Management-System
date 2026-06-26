@@ -66,6 +66,7 @@ model Attribute {
   category    AttributeCategory
   dataType    AttributeDataType
   options     String[]            @default([])
+  isBuiltIn   Boolean             @default(false)
   createdAt   DateTime            @default(now())
 
   values         AttributeValue[]

@@ -1,2 +1,90 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
+
+.react-tags-wrapper .react-tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.375rem;
+    background: #fff;
+    cursor: text;
+}
+
+.dark .react-tags-wrapper .react-tags {
+    background: #1e293b;
+    border-color: #475569;
+}
+
+.react-tags-wrapper .react-tags__list {
+    display: contents;
+}
+
+.react-tags-wrapper .react-tags__list-item {
+    display: inline-flex;
+}
+
+.react-tags-wrapper .react-tags__tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: #0ea5e9;
+    color: #fff;
+    padding: 0.15rem 0.55rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    border: none;
+    cursor: pointer;
+}
+
+.react-tags-wrapper .react-tags__tag::after {
+    content: "×";
+    font-weight: bold;
+}
+
+.react-tags-wrapper .react-tags__combobox {
+    flex: 1;
+    min-width: 8rem;
+}
+
+.react-tags-wrapper .react-tags__combobox-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    color: inherit;
+    width: 100%;
+    padding: 0.15rem;
+}
+
+.react-tags-wrapper .react-tags__listbox {
+    position: absolute;
+    z-index: 50;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.375rem;
+    margin-top: 0.25rem;
+    max-height: 12rem;
+    overflow-y: auto;
+}
+
+.dark .react-tags-wrapper .react-tags__listbox {
+    background: #1e293b;
+    border-color: #475569;
+}
+
+.react-tags-wrapper .react-tags__listbox-option {
+    padding: 0.4rem 0.6rem;
+    cursor: pointer;
+}
+
+.react-tags-wrapper .react-tags__listbox-option[aria-selected="true"],
+.react-tags-wrapper .react-tags__listbox-option:hover {
+    background: #e0f2fe;
+}
+
+.dark .react-tags-wrapper .react-tags__listbox-option[aria-selected="true"],
+.dark .react-tags-wrapper .react-tags__listbox-option:hover {
+    background: #334155;
+}

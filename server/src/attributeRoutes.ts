@@ -133,6 +133,15 @@ router.put("/:id", requireAuth, requireRole("RECRUITER", "ADMIN"), async (req, r
 router.delete("/:id", requireAuth, requireRole("RECRUITER", "ADMIN"), async (req, res) => {
   try {
     const id = req.params.id as string;
+    
+    const attribute = await prisma.attribute.findUnique({ where: { id } });
+    if (!attribute) {
+      return res.status(404).json({ error: "Attribute not found" });
+    }
+    if (attribute.isBuiltIn) {
+      return res.status(403).json({ error: "Built-in attributes cannot be deleted" });
+    }
+
     await prisma.attribute.delete({
       where: { id }
     });

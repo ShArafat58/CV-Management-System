@@ -105,5 +105,20 @@
   "pos.post": "Post",
   "pos.writePost": "Write a post...",
   "pos.noPosts": "No posts yet. Be the first to start the discussion!",
-  "pos.sending": "Sending..."
+  "pos.sending": "Sending...",
+  "home.welcomeTitle": "Welcome to CV Management",
+  "home.welcomeTagline": "Discover top talent and manage your positions with ease.",
+  "home.statsPositions": "Total Positions",
+  "home.statsCandidates": "Candidates",
+  "home.statsRecruiters": "Recruiters",
+  "home.statsCvs": "Total CVs",
+  "home.statsCvsLast24h": "CVs in last 24h",
+  "home.latestPositions": "Latest positions",
+  "home.popularPositions": "Most popular",
+  "home.tagCloud": "Technology tags",
+  "home.noCvsYet": "No CVs yet",
+  "home.noPositionsYet": "No positions yet",
+  "home.cvs": "CVs",
+  "home.visibilityPublic": "Public",
+  "home.visibilityRestricted": "Restricted"
 }

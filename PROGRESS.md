@@ -197,6 +197,25 @@
 
 ---
 
+## DEPLOYMENT — Live on Render (done after Step 9)
+
+The whole app (Steps 1-9) is deployed and verified live at https://cv-management-system-zlfk.onrender.com — Google + GitHub login, all features, and real-time discussions all work in production.
+
+**How production differs from dev:** Render runs ONE web service (the server serves the built `client/dist`), so everything is same-origin — there is no `:5173` and no Vite proxy in production.
+
+**Key fixes that made deployment work (good for defense):**
+- **Production build is strict.** `tsc -b && vite build` caught errors that `tsx`/Vite dev ignored: `FormEvent` needed `import type` (verbatimModuleSyntax), and an unused `onClickTitle` prop had to be removed from PositionsTable + Positions. Always run `npm run build` locally before deploying.
+- **Prisma on Render:** added `"postinstall": "prisma generate"` to `server/package.json`. Render does a fresh install and doesn't generate the client otherwise -> "did not initialize" crash at startup.
+- **OAuth callback over HTTPS:** Render sits behind a proxy (app runs http internally, https externally). Passport built `http://` callback URLs -> `redirect_uri_mismatch`. Fixed by: (1) `app.set("trust proxy", 1)` in index.ts, (2) absolute callback URLs in auth.ts using `const BASE_URL = process.env.SERVER_URL || "http://localhost:3000"` then `callbackURL: ${BASE_URL}/api/auth/google/callback`.
+- **Socket.IO in production:** client connects to `import.meta.env.DEV ? "http://localhost:3000" : window.location.origin` so it works same-origin live.
+- **Render Environment Variables (set in dashboard, NO quotes):** DATABASE_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, SESSION_SECRET, CLIENT_URL (= live URL, not localhost), SERVER_URL (= live URL). Local `.env` keeps localhost values; code reads process.env so each environment differs.
+- **Google OAuth:** added BOTH localhost and live URIs (JavaScript origin + redirect URI) so dev and production both work — don't replace, add.
+- **GitHub OAuth:** made a separate OAuth app for production (live callback), put its new Client ID/Secret in Render's env vars; the old app still serves localhost.
+- If Render auto-deploy misses the latest commit, use Manual Deploy -> Deploy latest commit.
+- NOTE: session uses in-memory MemoryStore (Render warns it's not for production) — fine for the course; could move to a Postgres session store later.
+
+---
+
 ## Workflow Notes
 
 - Git: `git status` -> `git add .` -> `git commit` -> `git push origin main` (Windows/PowerShell)
@@ -212,4 +231,4 @@
 
 ---
 
-*Last updated: Step 9 (Discussions + Likes) complete. 9/12 done. Core remaining: Step 10 (Main page) and Step 11 (Full-text search). Step 12 optional. Live deploy update still pending.*
+*Last updated: Step 9 complete + LIVE DEPLOY done and verified (Google/GitHub login, real-time discussions all working in production). 9/12 done. Core remaining: Step 10 (Main page) and Step 11 (Full-text search). Step 12 optional.*

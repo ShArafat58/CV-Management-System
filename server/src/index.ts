@@ -13,6 +13,7 @@ import positionRoutes from "./positionRoutes.js";
 import cvRoutes from "./cvRoutes.js";
 import discussionRoutes from "./discussionRoutes.js";
 import likeRoutes from "./likeRoutes.js";
+import homeRoutes from "./homeRoutes.js";
 import { setIo } from "./socket.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -70,6 +71,7 @@ app.use("/api/positions", positionRoutes);
 app.use("/api/cvs", cvRoutes);
 app.use("/api/discussions", discussionRoutes);
 app.use("/api/likes", likeRoutes);
+app.use("/api/home", homeRoutes);
 
 app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", message: "Hello from the server" });

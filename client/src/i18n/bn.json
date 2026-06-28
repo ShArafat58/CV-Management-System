@@ -105,5 +105,20 @@
   "pos.post": "পোস্ট করুন",
   "pos.writePost": "একটি পোস্ট লিখুন...",
   "pos.noPosts": "এখনও কোনো পোস্ট নেই। প্রথম পোস্ট করে আলোচনা শুরু করুন!",
-  "pos.sending": "পাঠানো হচ্ছে..."
+  "pos.sending": "পাঠানো হচ্ছে...",
+  "home.welcomeTitle": "সিভি ম্যানেজমেন্টে স্বাগতম",
+  "home.welcomeTagline": "সেরা প্রতিভা খুঁজুন এবং সহজে আপনার পদসমূহ পরিচালনা করুন।",
+  "home.statsPositions": "মোট পদ",
+  "home.statsCandidates": "প্রার্থী",
+  "home.statsRecruiters": "রিক্রুটার",
+  "home.statsCvs": "মোট সিভি",
+  "home.statsCvsLast24h": "গত ২৪ ঘন্টায় সিভি",
+  "home.latestPositions": "সর্বশেষ পদসমূহ",
+  "home.popularPositions": "সবচেয়ে জনপ্রিয়",
+  "home.tagCloud": "প্রযুক্তি ট্যাগ",
+  "home.noCvsYet": "এখনও কোনো সিভি নেই",
+  "home.noPositionsYet": "এখনও কোনো পদ নেই",
+  "home.cvs": "সিভি",
+  "home.visibilityPublic": "পাবলিক",
+  "home.visibilityRestricted": "সীমাবদ্ধ"
 }

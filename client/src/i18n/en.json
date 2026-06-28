@@ -120,5 +120,14 @@
   "home.noPositionsYet": "No positions yet",
   "home.cvs": "CVs",
   "home.visibilityPublic": "Public",
-  "home.visibilityRestricted": "Restricted"
+  "home.visibilityRestricted": "Restricted",
+  "search.resultsFor": "Results for",
+  "search.resultsForTag": "Results for tag",
+  "search.noResults": "No results found for '{{term}}'",
+  "search.positions": "Positions",
+  "search.attributes": "Attributes",
+  "search.tags": "Tags",
+  "search.name": "Name",
+  "search.category": "Category",
+  "search.dataType": "Data Type"
 }

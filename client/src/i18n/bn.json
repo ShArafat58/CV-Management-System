@@ -120,5 +120,14 @@
   "home.noPositionsYet": "এখনও কোনো পদ নেই",
   "home.cvs": "সিভি",
   "home.visibilityPublic": "পাবলিক",
-  "home.visibilityRestricted": "সীমাবদ্ধ"
+  "home.visibilityRestricted": "সীমাবদ্ধ",
+  "search.resultsFor": "ফলাফল:",
+  "search.resultsForTag": "ট্যাগের জন্য ফলাফল:",
+  "search.noResults": "'{{term}}' এর জন্য কোনো ফলাফল পাওয়া যায়নি",
+  "search.positions": "পদসমূহ",
+  "search.attributes": "অ্যাট্রিবিউটসমূহ",
+  "search.tags": "ট্যাগসমূহ",
+  "search.name": "নাম",
+  "search.category": "ক্যাটাগরি",
+  "search.dataType": "ডাটা টাইপ"
 }

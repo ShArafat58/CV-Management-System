@@ -24,7 +24,7 @@
 
 ---
 
-## DONE (Step 1-8)
+## DONE (Step 1-9)
 
 ### Step 1 — Scaffold + Hello World Deploy
 - Monorepo: `client/` (React+Vite+TS) + `server/` (Express+TS)
@@ -143,12 +143,26 @@
 
 ---
 
-## REMAINING (Step 9-12)
-
 ### Step 9 — Discussions + Likes
-- Each position has a Discussion tab, Markdown posts, chronological
-- Real-time updates in 2-5 seconds (Socket.IO — already done in Battleship)
-- Likes: recruiters only, once per CV, count shown
+- **Socket.IO setup:** wrapped Express in an HTTP server (`createServer(app)`), attached Socket.IO with CORS for the client URL; switched `app.listen` -> `httpServer.listen`. Helper `server/src/socket.ts` (`setIo`/`getIo`) lets routes broadcast.
+- Sockets join a room `position:<id>` on "join_position", leave on "leave_position" -> broadcasts reach only viewers of that position.
+- **Backend** `server/src/discussionRoutes.ts` (mounted `/api/discussions`):
+  - GET `/:positionId` -> posts oldest-first with authorName + authorRole (select, no SELECT *)
+  - POST `/:positionId` -> creates a post, broadcasts via `getIo().to("position:"+id).emit("new_post", post)`, returns it (201)
+- **Backend** `server/src/likeRoutes.ts` (mounted `/api/likes`):
+  - POST `/:cvId/toggle` -> RECRUITER/ADMIN only; toggles like (delete if exists, create if not), returns { liked, count }
+  - GET `/:cvId` -> { liked, count }; `@@unique([cvId, recruiterId])` guarantees one like per recruiter per CV at the DB level
+- **Frontend:**
+  - `client/src/lib/socket.ts` -> socket.io-client singleton connecting to http://localhost:3000 with credentials
+  - `client/src/pages/PositionDetail.tsx` (route `/positions/:id`) -> Details + Discussion tabs; position title in the table now links here
+  - `client/src/components/discussions/Discussion.tsx` -> loads posts, joins room on mount / leaves on unmount, listens for "new_post" and appends (dedup by id), markdown via react-markdown; recruiter sees author name as link to /users/:authorId
+  - **Duplicate avoidance:** after POST, the sender does NOT append locally — relies on the "new_post" socket broadcast (server emits to everyone in the room including sender); handler also checks id
+  - CvView like button: recruiters/admins get a clickable heart toggle (red fill when liked); candidates see a read-only heart + count
+- Tested: post + real-time appearance in a second tab, markdown, like toggle + count
+
+---
+
+## REMAINING (Step 10-12)
 
 ### Step 10 — Main Page
 - Latest positions (table), Most popular (top 5 by CV count)
@@ -198,4 +212,4 @@
 
 ---
 
-*Last updated: Step 8 (CV Generation) complete. 8/12 done — all three killer features built. Next: live deploy update OR Step 9 (Discussions + Likes).*
+*Last updated: Step 9 (Discussions + Likes) complete. 9/12 done. Core remaining: Step 10 (Main page) and Step 11 (Full-text search). Step 12 optional. Live deploy update still pending.*

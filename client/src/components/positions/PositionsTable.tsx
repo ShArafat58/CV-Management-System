@@ -20,7 +20,7 @@ interface PositionsTableProps {
   canManage: boolean;
   onToggleSelect: (id: string) => void;
   onToggleSelectAll: () => void;
-  onClickTitle: (id: string) => void;
+
 }
 
 export function PositionsTable({
@@ -29,7 +29,7 @@ export function PositionsTable({
   canManage,
   onToggleSelect,
   onToggleSelectAll,
-  onClickTitle,
+
 }: PositionsTableProps) {
   const { t } = useTranslation();
 
@@ -97,11 +97,10 @@ export function PositionsTable({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      pos.isPublic
-                        ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
-                        : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-                    }`}
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${pos.isPublic
+                      ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
+                      : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                      }`}
                   >
                     {pos.isPublic ? t("pos.public") : t("pos.restricted")}
                   </span>

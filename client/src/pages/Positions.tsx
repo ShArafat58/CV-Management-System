@@ -85,12 +85,6 @@ export function Positions() {
     setIsModalOpen(true);
   };
 
-  const handleClickTitle = (id: string) => {
-    if (!canManage) return;
-    setEditId(id);
-    setIsModalOpen(true);
-  };
-
   const handleDuplicate = async () => {
     if (selectedIds.size !== 1) return;
     const id = Array.from(selectedIds)[0];
@@ -146,7 +140,7 @@ export function Positions() {
           canManage={canManage}
           onToggleSelect={handleToggleSelect}
           onToggleSelectAll={handleToggleSelectAll}
-          onClickTitle={handleClickTitle}
+
         />
       </div>
 

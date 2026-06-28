@@ -97,6 +97,8 @@
   "cv.empty": "Empty",
   "cv.saved": "Saved",
   "cv.conflict": "Conflict or not eligible.",
+  "cv.downloadCsv": "Download CSV",
+  "cv.downloadPdf": "Download PDF",
   "cv.like": "Like",
   "cv.unlike": "Unlike",
   "cv.likesCount": "Likes count",
@@ -129,5 +131,9 @@
   "search.tags": "Tags",
   "search.name": "Name",
   "search.category": "Category",
-  "search.dataType": "Data Type"
+  "search.dataType": "Data Type",
+  "common.uploadImage": "Upload Image",
+  "common.uploading": "Uploading...",
+  "common.removeImage": "Remove",
+  "common.noPhoto": "No photo"
 }

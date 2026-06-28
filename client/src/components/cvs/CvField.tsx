@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Check } from "lucide-react";
 import api from "../../lib/api";
+import { ImageUpload } from "../common/ImageUpload";
 
 interface CvAttribute {
   attributeId: string;
@@ -131,6 +132,16 @@ export function CvField({ cvId, attribute, canEdit }: CvFieldProps) {
             ))}
           </select>
         );
+      case "IMAGE":
+        return (
+          <ImageUpload
+            value={value}
+            onChange={(url) => {
+              setValue(url);
+              handleSave(url);
+            }}
+          />
+        );
       default:
         return (
           <input
@@ -146,6 +157,10 @@ export function CvField({ cvId, attribute, canEdit }: CvFieldProps) {
   };
 
   const renderReadOnly = () => {
+    if (attribute.dataType === "IMAGE") {
+      return <ImageUpload value={value} onChange={() => {}} disabled />;
+    }
+
     if (isEmpty) {
       return (
         <div className="w-full p-2 border border-red-300 dark:border-red-800/50 rounded bg-red-50 dark:bg-red-900/10 text-red-500 dark:text-red-400 text-sm">

@@ -97,6 +97,8 @@
   "cv.empty": "খালি",
   "cv.saved": "সংরক্ষিত",
   "cv.conflict": "কনফ্লিক্ট অথবা যোগ্য নয়।",
+  "cv.downloadCsv": "CSV ডাউনলোড করুন",
+  "cv.downloadPdf": "PDF ডাউনলোড করুন",
   "cv.like": "লাইক",
   "cv.unlike": "আনলাইক",
   "cv.likesCount": "লাইক সংখ্যা",
@@ -129,5 +131,9 @@
   "search.tags": "ট্যাগসমূহ",
   "search.name": "নাম",
   "search.category": "ক্যাটাগরি",
-  "search.dataType": "ডাটা টাইপ"
+  "search.dataType": "ডাটা টাইপ",
+  "common.uploadImage": "ছবি আপলোড করুন",
+  "common.uploading": "আপলোড হচ্ছে...",
+  "common.removeImage": "মুছে ফেলুন",
+  "common.noPhoto": "কোনো ছবি নেই"
 }

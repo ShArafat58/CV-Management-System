@@ -5,6 +5,8 @@
 **GitHub:** https://github.com/ShArafat58/CV-Management-System
 **Live (Render):** https://cv-management-system-zlfk.onrender.com
 
+**STATUS: ALL 12 STEPS COMPLETE — core done + optional extras + live deployed.**
+
 ---
 
 ## Tech Stack (locked)
@@ -17,14 +19,14 @@
 | ORM | Prisma 6 | Type-safe, clean migrations |
 | Database | Neon PostgreSQL | Relational, native full-text search |
 | Auth | Passport.js (Google + GitHub OAuth) | Industry-standard, 2 providers |
-| Realtime | Socket.IO (later, Step 9) | For discussions |
+| Realtime | Socket.IO | For discussions |
 | Deploy | Render (single web service) | Server serves the built client |
 
-**Key libraries added:** axios, react-router-dom, react-i18next, lucide-react, react-markdown, react-tag-autocomplete, date-fns
+**Key libraries added:** axios, react-router-dom, react-i18next, lucide-react, react-markdown, react-tag-autocomplete, date-fns, socket.io / socket.io-client, papaparse (CSV), jspdf (PDF), qrcode (QR)
 
 ---
 
-## DONE (Step 1-9)
+## DONE (all 12 steps)
 
 ### Step 1 — Scaffold + Hello World Deploy
 - Monorepo: `client/` (React+Vite+TS) + `server/` (Express+TS)
@@ -52,183 +54,132 @@
 - `express-session` -> session cookie; serialize/deserialize stores only the user id
 - `server/src/middleware.ts` -> `requireAuth` and `requireRole(...roles)`, both check for blocked users
 - 3 roles: CANDIDATE (default), RECRUITER, ADMIN
-- Tested locally: both providers login + /me + protected route
-- NOTE: sessions are in-memory, so a server restart logs everyone out (fine for dev)
+- NOTE: sessions are in-memory, so a server restart logs everyone out (fine for dev/course)
 
 ### Step 4 — App Shell (frontend structure)
 - `client/src/lib/api.ts` -> axios instance (`baseURL: /api`, `withCredentials: true`)
 - Vite proxy: `/api` -> `localhost:3000` (preserves cookies)
 - Tailwind v4 dark mode: `@custom-variant dark (&:where(.dark, .dark *))`
-- `AuthContext` -> frontend knows who is logged in (user, loading, refresh, logout)
+- `AuthContext` -> who is logged in (user, loading, refresh, logout)
 - `ThemeContext` -> light/dark, remembered in localStorage
 - i18n (react-i18next) -> English (default) + Bengali, language remembered in localStorage
-- `Header` -> logo, nav links, full-text search box (UI ready, wired later), theme toggle, language toggle, login dropdown (Google/GitHub), logout
+- `Header` -> logo, nav links, full-text search box, theme toggle, language toggle, login dropdown (Google/GitHub), logout
 - `Layout` -> Header + `<Outlet/>`, responsive, light+dark
-- Routing (react-router) -> Home, Positions, Profile, MyCvs, Search, NotFound, Attributes, /cvs/:id
-- Removed gradient for clean sky-blue (to match Pavel's taste)
-- Tested full login flow from the frontend
+- Routing -> Home, Positions, Profile, MyCvs, Search, NotFound, Attributes, /cvs/:id, /positions/:id
 
 ### Step 5 — Killer Feature #1: Attribute Library
-- **Backend** `server/src/attributeRoutes.ts` (mounted at `/api/attributes`):
-  - GET `/` -> list, prefix search (`startsWith` insensitive), category filter, uses `select` (no SELECT *)
+- **Backend** `server/src/attributeRoutes.ts` (`/api/attributes`):
+  - GET `/` -> list, prefix search (`startsWith` insensitive), category filter, `select` (no SELECT *)
   - GET `/recent` -> 5 latest
   - POST/PUT/DELETE -> RECRUITER+ADMIN only (`requireRole`)
-  - Validation: unique name, category/dataType enum check, ONE_OF_MANY requires non-empty options
-  - Errors: duplicate -> 409, not found -> 404
-  - DELETE blocks built-in attributes (403) — added in Step 6
+  - Validation: unique name, enum check, ONE_OF_MANY requires non-empty options; duplicate -> 409, not found -> 404; DELETE blocks built-in (403)
 - **Frontend** `client/src/pages/AttributeLibrary.tsx` + `components/attributes/`:
-  - **Table view** (not gallery/tiles — requirement)
-  - **No buttons in rows** — checkbox select + toolbar above (requirement, else -20%)
-  - Toolbar: 0 selected -> New; 1 selected -> Edit+Delete; >1 -> Delete
-  - Modal form (create/edit), shows options editor when ONE_OF_MANY
-  - Search (debounced) + category filter
-  - Role check: candidates see read-only, toolbar hidden
-- Tested: create, edit, delete, prefix search, category filter, duplicate (409)
+  - **Table view** (not tiles); **no buttons in rows** — checkbox + toolbar (0 -> New; 1 -> Edit+Delete; >1 -> Delete)
+  - Modal form, options editor for ONE_OF_MANY; search + category filter; candidates read-only
 
 ### Step 6 — Personal Profile
 - **Schema change:** added `isBuiltIn Boolean @default(false)` to Attribute (migration `add_builtin_flag`)
-- **Seed** `server/prisma/seed.ts` -> 4 built-in attributes (First Name, Last Name, Location, Personal Photo) using `upsert` (safe to re-run). Run with `npx tsx prisma/seed.ts`
-- **Backend** `server/src/profileRoutes.ts` (mounted at `/api/profile`, all requireAuth, own profile only except ADMIN can pass userId):
-  - GET `/` -> full profile (values + attribute info + projects) + builtInAttributes list; creates empty profile if missing; uses include/select (no SELECT *)
-  - PUT `/values` -> **auto-save with optimistic locking**: checks body.version against profile.version inside a `$transaction`; on mismatch returns 409 `version_conflict` + currentVersion and saves nothing; on match upserts values and increments version
-  - POST/PUT/DELETE `/projects` -> project CRUD with ownership check
-  - GET `/project-tags` -> distinct sorted tags for autocomplete (no query inside loop)
+- **Seed** `server/prisma/seed.ts` -> 4 built-in attributes (First Name, Last Name, Location, Personal Photo) via `upsert`; run `npx tsx prisma/seed.ts`
+- **Backend** `server/src/profileRoutes.ts` (`/api/profile`, requireAuth):
+  - GET `/` -> full profile + builtInAttributes; creates empty profile if missing
+  - PUT `/values` -> **auto-save with optimistic locking** ($transaction, 409 version_conflict)
+  - POST/PUT/DELETE `/projects`; GET `/project-tags` (distinct, no loop query)
 - **Frontend** `client/src/pages/Profile.tsx` + `components/profile/ProjectsTab.tsx`:
-  - 3 tabs: Me (built-in attrs), Info (library attrs + add-attribute picker), Projects
-  - ProfileField component renders the right input per dataType (text/textarea/number/date/checkbox/select)
-  - **Auto-save:** debounced ~2s after typing stops (NOT every keystroke); shows "Saving..."/"Saved" indicator
-  - **Conflict handling:** on 409, shows a red non-dismissible banner with a Reload button; auto-save halts until reload
-  - **Projects:** table view + selection toolbar (no row buttons), modal with date range, markdown description (react-markdown live preview), tag autocomplete (react-tag-autocomplete, suggestions from /project-tags)
-- Tested: auto-save persists after refresh, optimistic locking, project create/edit/delete, markdown preview, tags
+  - 3 tabs: Me (built-in), Info (library attrs + picker), Projects
+  - Auto-save debounced ~2s ("Saving"/"Saved"); 409 -> red banner + Reload
+  - Projects: table + toolbar, markdown description (react-markdown preview), tag autocomplete
 
 ### Step 7 — Killer Feature #2: Positions
-- **Backend** `server/src/positionRoutes.ts` (mounted at `/api/positions`):
-  - GET `/` -> list with `?search=` (title contains), includes `_count.cvs` (no query in loop), select only (no SELECT *)
-  - GET `/:id` -> full detail: scalars + accessRules + attributes joined to Attribute, ordered by sortOrder
-  - POST `/` -> create (RECRUITER/ADMIN), creates PositionAttribute rows in a `$transaction`
-  - POST `/:id/duplicate` -> copy all fields ("Copy of ..."), reset version, copy attributes, in a `$transaction`
-  - PUT `/:id` -> update with **optimistic locking** (version check in `$transaction`, 409 on mismatch); attributeIds = full replacement (deleteMany then createMany)
-  - DELETE `/:id` -> cascade removes PositionAttribute/Cv/Post
-  - Positions are SHARED (any recruiter/admin can edit/delete, no ownership)
+- **Backend** `server/src/positionRoutes.ts` (`/api/positions`):
+  - GET `/` (?search, `_count.cvs`, no loop query), GET `/:id` (attributes by sortOrder)
+  - POST `/` ($transaction), POST `/:id/duplicate`, PUT `/:id` (**optimistic locking**, attributeIds full replace), DELETE
+  - Positions are SHARED (any recruiter/admin edits/deletes)
 - **Frontend** `client/src/pages/Positions.tsx` + `components/positions/`:
-  - **Table view** + selection toolbar (no row buttons): 0 -> New; 1 -> Edit/Duplicate/Delete; >1 -> Delete
-  - PositionModal: title, description, Public/Restricted toggle, attribute picker, project settings (maxProjects, projectTags)
-  - **AccessRuleEditor:** operators depend on attribute dataType (NUMERIC -> >,>=,<,<=,= ; BOOLEAN/ONE_OF_MANY -> = ; STRING/TEXT -> contains,= ; DATE -> >,<,=); value input adapts (number/select/date/checkbox)
-  - On edit: loads full detail via GET /:id; handles 409 version_conflict
-- Tested: create, access rules (operator/value change by type), duplicate, edit, refresh persists
+  - Table + toolbar (no row buttons)
+  - PositionModal: title, description, Public/Restricted, attribute picker, maxProjects, projectTags
+  - **AccessRuleEditor:** operators depend on dataType (NUMERIC >,>=,<,<=,= ; BOOLEAN/ONE_OF_MANY = ; STRING/TEXT contains,= ; DATE >,<,=); value input adapts
 
 ### Step 8 — Killer Feature #3: CV Generation
-- **Backend** `server/src/cvRoutes.ts` (mounted at `/api/cvs`, all requireAuth):
-  - Helper `candidateMeetsAccessRules(profileValues, accessRules)` -> numeric ops parse both sides as numbers; "=" numeric-or-case-insensitive-string; "contains" substring; ALL rules AND
-  - GET `/` -> my CVs (position title + `_count.likes`)
-  - GET `/available-positions` -> positions that are public OR pass access rules, excluding ones I already have a CV for (loads profile + positions ONCE, filters in memory — no query in loop)
-  - POST `/` -> create CV; checks eligibility (403 not_eligible), one-per-position (409 cv_exists); adds position's attributes to profile with empty value via `createMany skipDuplicates` (computed in memory, no loop query)
-  - GET `/:id` -> assembled CV: owner/admin/recruiter may view; `canEdit` = owner or admin; attributes with profile value ("" if missing); projects filtered by position.projectTags, limited to maxProjects
-  - PUT `/:id/value` -> in-place edit writes the **master value into the owner's profile** (upsert AttributeValue); owner/admin only
-  - DELETE `/:id` -> owner/admin only
+- **Backend** `server/src/cvRoutes.ts` (`/api/cvs`, requireAuth):
+  - Helper `candidateMeetsAccessRules` -> numeric/=/contains, ALL rules AND
+  - GET `/` (my CVs + `_count.likes`); GET `/available-positions` (public OR passes rules, no loop query)
+  - POST `/` (403 not_eligible, 409 cv_exists, adds missing attrs to profile via createMany skipDuplicates)
+  - GET `/:id` (assembled CV, `canEdit`, projects filtered by tags + maxProjects)
+  - PUT `/:id/value` -> writes **master value into owner's profile**; DELETE owner/admin only
 - **Frontend** `client/src/pages/MyCvs.tsx`, `pages/CvView.tsx`, `components/cvs/`:
-  - My CVs: **table** + toolbar (no row buttons); New CV modal lists available positions; handles not_eligible / cv_exists
-  - CvView: structured CV document (not a table); each attribute inline-editable per dataType when canEdit, read-only for recruiters; saves on blur via PUT /:id/value
-  - **Empty values highlighted in RED** (editable and read-only) — requirement
-  - Projects section: read-only, markdown description via react-markdown, tags as chips
-- Tested: create CV (auto-fill), in-place edit reflects on Profile page (master value), table/toolbar, empty highlighting
-
----
-
-## IMPORTANT FIX (Step 8) — Express req.user / req.isAuthenticated types
-- The `server/` folder had NO `tsconfig.json`, so TypeScript didn't load Passport/Express types -> `req.user`, `req.isAuthenticated` showed "does not exist" errors.
-- Fix: created `server/tsconfig.json` with `"types": ["node", "express", "passport"]`.
-- Augmented `Express.User` interface (id, email, role, etc.) inside a `declare global` block in `server/src/middleware.ts` (a real module that every route imports), NOT a standalone `.d.ts` (which wasn't being picked up).
-- `verbatimModuleSyntax` requires `import type { Request, Response, NextFunction }` in middleware.ts.
-
----
+  - My CVs: table + toolbar; New CV modal (available positions; handles not_eligible/cv_exists)
+  - CvView: structured CV doc; inline edit per dataType when canEdit, read-only for recruiters
+  - **Empty values highlighted RED**; projects read-only with markdown + tag chips
 
 ### Step 9 — Discussions + Likes
-- **Socket.IO setup:** wrapped Express in an HTTP server (`createServer(app)`), attached Socket.IO with CORS for the client URL; switched `app.listen` -> `httpServer.listen`. Helper `server/src/socket.ts` (`setIo`/`getIo`) lets routes broadcast.
-- Sockets join a room `position:<id>` on "join_position", leave on "leave_position" -> broadcasts reach only viewers of that position.
-- **Backend** `server/src/discussionRoutes.ts` (mounted `/api/discussions`):
-  - GET `/:positionId` -> posts oldest-first with authorName + authorRole (select, no SELECT *)
-  - POST `/:positionId` -> creates a post, broadcasts via `getIo().to("position:"+id).emit("new_post", post)`, returns it (201)
-- **Backend** `server/src/likeRoutes.ts` (mounted `/api/likes`):
-  - POST `/:cvId/toggle` -> RECRUITER/ADMIN only; toggles like (delete if exists, create if not), returns { liked, count }
-  - GET `/:cvId` -> { liked, count }; `@@unique([cvId, recruiterId])` guarantees one like per recruiter per CV at the DB level
-- **Frontend:**
-  - `client/src/lib/socket.ts` -> socket.io-client singleton connecting to http://localhost:3000 with credentials
-  - `client/src/pages/PositionDetail.tsx` (route `/positions/:id`) -> Details + Discussion tabs; position title in the table now links here
-  - `client/src/components/discussions/Discussion.tsx` -> loads posts, joins room on mount / leaves on unmount, listens for "new_post" and appends (dedup by id), markdown via react-markdown; recruiter sees author name as link to /users/:authorId
-  - **Duplicate avoidance:** after POST, the sender does NOT append locally — relies on the "new_post" socket broadcast (server emits to everyone in the room including sender); handler also checks id
-  - CvView like button: recruiters/admins get a clickable heart toggle (red fill when liked); candidates see a read-only heart + count
-- Tested: post + real-time appearance in a second tab, markdown, like toggle + count
+- **Socket.IO:** Express wrapped in `createServer(app)`, Socket.IO with CORS; `httpServer.listen`; helper `server/src/socket.ts` (`setIo`/`getIo`)
+- Rooms `position:<id>` (join/leave) -> broadcasts reach only that position's viewers
+- **Backend** `discussionRoutes.ts` (`/api/discussions`): GET/POST `/:positionId`; POST broadcasts `new_post` to the room
+- **Backend** `likeRoutes.ts` (`/api/likes`): POST `/:cvId/toggle` (RECRUITER/ADMIN), GET `/:cvId`; `@@unique([cvId, recruiterId])` = one like per recruiter per CV at DB level
+- **Frontend:** `lib/socket.ts` singleton; `PositionDetail.tsx` (Details + Discussion tabs); `Discussion.tsx` (join/leave room, append `new_post` dedup by id, markdown); CvView like heart (recruiter toggle, candidate read-only)
+- **Duplicate avoidance:** sender relies on the socket broadcast, not local append
+
+### Step 10 — Main Page
+- **Backend** `server/src/homeRoutes.ts` (`/api/home`): single GET returns stats (totals + cvsLast24h via `count()` in `Promise.all`), latestPositions (5, `_count.cvs`), popularPositions (top 5 by cv count, sorted in memory), tagCloud (Position.projectTags + Project.tags counted in a Map, no loop query)
+- **Frontend** `client/src/pages/Home.tsx`: 5 stat cards, Latest + Most popular tables (links to /positions/:id), tag cloud with font size scaled by count; tags link to /search?tag=...
+
+### Step 11 — Full-text Search
+- **Backend** `server/src/searchRoutes.ts` (`/api/search?q=`): Postgres full-text via `to_tsvector` + `websearch_to_tsquery` + `ts_rank`, run with **parameterized** `prisma.$queryRaw` (no string concat -> SQL-injection safe); positions (title + shortDescription) and attributes (name); tags matched case-insensitively in memory
+- **Frontend** `client/src/pages/Search.tsx`: reads `?q=` (header box) and `?tag=` (tag cloud); shows positions table, attributes table, tag pills; header search box navigates here on Enter
+- websearch_to_tsquery does stemming + stop-word removal + phrase/exclusion syntax (better than LIKE)
+
+### Step 12 — Optional extras (extra credit)
+- **CSV export** (`CvView.tsx`): "Download CSV" button; builds an array-of-arrays and uses `Papa.unparse` (papaparse) for correct escaping; downloads via Blob + temporary `<a>` (no browser storage)
+- **PDF export + QR** (`CvView.tsx`): "Download PDF" button; jsPDF builds a formatted CV (title, details, projects) with `splitTextToSize` wrapping and manual page-break (`checkPageBreak` -> `addPage`); QR code generated with `QRCode.toDataURL(window.location.origin + "/cvs/" + id)` and placed via `addImage` -> scanning opens the live CV
+- (Not done, still optional: form auth + email confirmation, badges/SVG, field tuning regex/range)
 
 ---
 
-## REMAINING (Step 10-12)
-
-### Step 10 — Main Page
-- Latest positions (table), Most popular (top 5 by CV count)
-- Tag cloud (technology tags)
-- Statistics (CVs in last 24h, total positions/candidates/recruiters/CVs)
-
-### Step 11 — Full-text Search
-- Wire up the header search box
-- Postgres native full-text search (no raw SELECT *)
-
-### Step 12 — Polish + Optional (extra credit)
-- PDF export + QR code
-- Form auth + email confirmation
-- Badges/achievements (SVG panel)
-- Field tuning (length limit, regex, range)
-- CV -> CSV/Excel export
+## IMPORTANT FIX — Express req.user / req.isAuthenticated types (Step 8)
+- `server/` had NO `tsconfig.json` -> Passport/Express types not loaded -> `req.user`, `req.isAuthenticated` "does not exist" errors.
+- Fix: created `server/tsconfig.json` with `"types": ["node", "express", "passport"]`.
+- Augmented `Express.User` (id, email, role, etc.) in a `declare global` block inside `server/src/middleware.ts` (a real module every route imports), NOT a standalone `.d.ts`.
+- `verbatimModuleSyntax` requires `import type { Request, Response, NextFunction }`.
 
 ---
 
 ## Important Rules (breaking these loses marks)
-
 - NO [Edit][Delete] buttons in table rows -> -20% (use checkbox+toolbar)
 - NO gallery/tiles view for positions/CVs -> -20% (use tables)
-- NO raw `SELECT *` -> DON'T (use Prisma `select`)
-- NO DB queries inside loops -> DON'T
-- NO uploading images to own server/DB -> DON'T (use cloud storage)
-- YES header search on every page
-- YES optimistic locking (attr, position, profile auto-save)
-- YES 2 languages, light/dark theme, responsive, ORM, full-text search
-- YES use ready-made components (Markdown renderer, tag input, image uploader) — don't copy-paste
-- YES **most important:** understand every line you write — they will ask you to change code live
+- NO raw `SELECT *` (use Prisma `select`); NO DB queries inside loops; NO image upload to own server/DB (cloud only)
+- YES header search, optimistic locking, 2 languages, light/dark, responsive, ORM, full-text search
+- YES use ready-made components (Markdown, tag input) — don't copy-paste
+- YES **most important:** understand every line — they will ask you to change code live
 
 ---
 
-## DEPLOYMENT — Live on Render (done after Step 9)
+## DEPLOYMENT — Live on Render
 
-The whole app (Steps 1-9) is deployed and verified live at https://cv-management-system-zlfk.onrender.com — Google + GitHub login, all features, and real-time discussions all work in production.
+Live and verified at https://cv-management-system-zlfk.onrender.com — Google + GitHub login, all features, real-time discussions, CSV/PDF/QR all work in production.
 
-**How production differs from dev:** Render runs ONE web service (the server serves the built `client/dist`), so everything is same-origin — there is no `:5173` and no Vite proxy in production.
+**Production differs from dev:** Render runs ONE web service (server serves built `client/dist`), same-origin — no `:5173`, no Vite proxy.
 
 **Key fixes that made deployment work (good for defense):**
-- **Production build is strict.** `tsc -b && vite build` caught errors that `tsx`/Vite dev ignored: `FormEvent` needed `import type` (verbatimModuleSyntax), and an unused `onClickTitle` prop had to be removed from PositionsTable + Positions. Always run `npm run build` locally before deploying.
-- **Prisma on Render:** added `"postinstall": "prisma generate"` to `server/package.json`. Render does a fresh install and doesn't generate the client otherwise -> "did not initialize" crash at startup.
-- **OAuth callback over HTTPS:** Render sits behind a proxy (app runs http internally, https externally). Passport built `http://` callback URLs -> `redirect_uri_mismatch`. Fixed by: (1) `app.set("trust proxy", 1)` in index.ts, (2) absolute callback URLs in auth.ts using `const BASE_URL = process.env.SERVER_URL || "http://localhost:3000"` then `callbackURL: ${BASE_URL}/api/auth/google/callback`.
-- **Socket.IO in production:** client connects to `import.meta.env.DEV ? "http://localhost:3000" : window.location.origin` so it works same-origin live.
-- **Render Environment Variables (set in dashboard, NO quotes):** DATABASE_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, SESSION_SECRET, CLIENT_URL (= live URL, not localhost), SERVER_URL (= live URL). Local `.env` keeps localhost values; code reads process.env so each environment differs.
-- **Google OAuth:** added BOTH localhost and live URIs (JavaScript origin + redirect URI) so dev and production both work — don't replace, add.
-- **GitHub OAuth:** made a separate OAuth app for production (live callback), put its new Client ID/Secret in Render's env vars; the old app still serves localhost.
-- If Render auto-deploy misses the latest commit, use Manual Deploy -> Deploy latest commit.
-- NOTE: session uses in-memory MemoryStore (Render warns it's not for production) — fine for the course; could move to a Postgres session store later.
+- **Strict production build:** `tsc -b && vite build` caught what dev ignored — `FormEvent` needed `import type`; unused `onClickTitle` prop removed. Always `npm run build` locally before deploying.
+- **Prisma on Render:** `"postinstall": "prisma generate"` in `server/package.json` (fresh install doesn't generate the client otherwise -> "did not initialize" crash).
+- **OAuth callback over HTTPS:** Render is behind a proxy (http inside, https outside). Passport built `http://` callbacks -> `redirect_uri_mismatch`. Fixed with (1) `app.set("trust proxy", 1)` in index.ts, (2) absolute callback URLs in auth.ts from `process.env.SERVER_URL || "http://localhost:3000"`.
+- **Socket.IO in production:** client connects to `import.meta.env.DEV ? "http://localhost:3000" : window.location.origin`.
+- **Render env vars (no quotes):** DATABASE_URL, GOOGLE_CLIENT_ID/SECRET, GITHUB_CLIENT_ID/SECRET, SESSION_SECRET, CLIENT_URL (live URL), SERVER_URL (live URL). Local `.env` keeps localhost; code reads process.env so each env differs.
+- **Google OAuth:** keep BOTH localhost and live URIs. **GitHub OAuth:** separate app for production (its credentials live in Render).
+- If auto-deploy misses a commit, use Manual Deploy -> Deploy latest commit.
 
 ---
 
 ## Workflow Notes
-
-- Git: `git status` -> `git add .` -> `git commit` -> `git push origin main` (Windows/PowerShell)
-- `.env` is never pushed (in gitignore) — credentials stay secret
-- Prisma commands always run from the `server/` folder
-- Two terminals: one for server (`npm run dev`), one for client (`npm run dev`)
+- Git: `git status` -> `git add .` -> `git commit` -> `git push origin main` (push auto-deploys to Render)
+- `.env` never pushed (gitignore)
+- Prisma commands run from `server/`; two terminals (server + client `npm run dev`)
 - Build UI with the Antigravity agent, but verify every part (for defense)
-- If agent imports a library, make sure it's installed (`npm install <lib>`) or Vite throws "Failed to resolve import"
-- Watch import paths from the agent (e.g. `../../../lib/api` vs `../../lib/api`)
-- After the agent creates a new file, if the editor shows "Cannot find module", run "TypeScript: Restart TS Server" (Ctrl+Shift+P)
-- For req.params.id type errors, use `req.params.id as string`
-- Render free instance sleeps when idle, first load takes 30-50 seconds
+- Agent imports a library -> make sure it's installed, or Vite throws "Failed to resolve import"
+- New file -> "Cannot find module" -> "TypeScript: Restart TS Server" (Ctrl+Shift+P)
+- `req.params.id as string` for route params
+- Render free instance sleeps when idle, first load 30-50s
 
 ---
 
-*Last updated: Step 9 complete + LIVE DEPLOY done and verified (Google/GitHub login, real-time discussions all working in production). 9/12 done. Core remaining: Step 10 (Main page) and Step 11 (Full-text search). Step 12 optional.*
+*Last updated: ALL 12 STEPS COMPLETE — core + optional CSV/PDF/QR done, live deployed and verified. Next focus: defense prep (understand every line; be ready to change code live).*

@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Heart } from "lucide-react";
+import { ArrowLeft, Heart, Download, FileText } from "lucide-react";
+import Papa from "papaparse";
+import { jsPDF } from "jspdf";
+import QRCode from "qrcode";
 import ReactMarkdown from "react-markdown";
 import api from "../lib/api";
 import { CvField } from "../components/cvs/CvField";
@@ -49,6 +52,7 @@ export function CvView() {
   
   const [likeData, setLikeData] = useState({ liked: false, count: 0 });
   const [isLiking, setIsLiking] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -80,6 +84,173 @@ export function CvView() {
   };
 
   const isRecruiterOrAdmin = user?.role === "RECRUITER" || user?.role === "ADMIN";
+
+  const handleDownloadCSV = () => {
+    if (!cv) return;
+
+    const data: any[][] = [];
+    data.push(["CV", cv.positionTitle]);
+    data.push([]);
+    data.push(["Field", "Value"]);
+    cv.attributes.forEach((attr) => {
+      data.push([attr.name, attr.value || ""]);
+    });
+
+    if (cv.projects.length > 0) {
+      data.push([]);
+      data.push(["Projects"]);
+      data.push(["Name", "Start Date", "End Date", "Tags", "Description"]);
+      cv.projects.forEach((proj) => {
+        data.push([
+          proj.name,
+          proj.startDate ? new Date(proj.startDate).toLocaleDateString() : "",
+          proj.endDate ? new Date(proj.endDate).toLocaleDateString() : "Present",
+          proj.tags.join(";"),
+          proj.description || ""
+        ]);
+      });
+    }
+
+    const csvString = Papa.unparse(data);
+    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const safeTitle = cv.positionTitle ? cv.positionTitle.replace(/[^a-zA-Z0-9-]/g, "-").replace(/-+/g, "-") : "cv";
+    link.href = url;
+    link.setAttribute("download", `${safeTitle}-cv.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!cv || isGeneratingPdf) return;
+    setIsGeneratingPdf(true);
+
+    try {
+      const doc = new jsPDF();
+      const margin = 15;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const maxWidth = pageWidth - margin * 2;
+      let yPos = margin;
+
+      const checkPageBreak = (height: number) => {
+        if (yPos + height > pageHeight - margin) {
+          doc.addPage();
+          yPos = margin;
+        }
+      };
+
+      const qrUrl = `${window.location.origin}/cvs/${cv.id}`;
+      const qrDataUrl = await QRCode.toDataURL(qrUrl, { margin: 1 });
+      const qrSize = 25;
+      
+      doc.addImage(qrDataUrl, "PNG", pageWidth - margin - qrSize, margin, qrSize, qrSize);
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text("Scan to view online", pageWidth - margin - qrSize, margin + qrSize + 4);
+
+      doc.setFontSize(22);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0);
+      const titleLines = doc.splitTextToSize(cv.positionTitle, maxWidth - qrSize - 10);
+      doc.text(titleLines, margin, yPos + 8);
+      yPos += titleLines.length * 9 + 5;
+
+      if (cv.positionShortDescription) {
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100);
+        const descLines = doc.splitTextToSize(cv.positionShortDescription, maxWidth);
+        doc.text(descLines, margin, yPos);
+        yPos += descLines.length * 6 + 8;
+      } else {
+        yPos += 8;
+      }
+
+      if (cv.attributes.length > 0) {
+        checkPageBreak(15);
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(0);
+        doc.text("Details", margin, yPos);
+        yPos += 8;
+
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(50);
+        
+        cv.attributes.forEach((attr) => {
+          const val = attr.value ? attr.value : "(empty)";
+          const line = `${attr.name}: ${val}`;
+          const splitLine = doc.splitTextToSize(line, maxWidth);
+          checkPageBreak(splitLine.length * 5 + 2);
+          doc.text(splitLine, margin, yPos);
+          yPos += splitLine.length * 5 + 2;
+        });
+        
+        yPos += 8;
+      }
+
+      if (cv.projects.length > 0) {
+        checkPageBreak(15);
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(0);
+        doc.text("Projects", margin, yPos);
+        yPos += 10;
+
+        cv.projects.forEach((proj) => {
+          checkPageBreak(25);
+          
+          doc.setFontSize(12);
+          doc.setFont("helvetica", "bold");
+          doc.setTextColor(0);
+          const projName = doc.splitTextToSize(proj.name, maxWidth);
+          doc.text(projName, margin, yPos);
+          yPos += projName.length * 5 + 1;
+
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "italic");
+          doc.setTextColor(100);
+          const start = proj.startDate ? new Date(proj.startDate).toLocaleDateString() : "—";
+          const end = proj.endDate ? new Date(proj.endDate).toLocaleDateString() : "Present";
+          doc.text(`${start} – ${end}`, margin, yPos);
+          yPos += 6;
+
+          if (proj.tags.length > 0) {
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(100);
+            const tagsText = doc.splitTextToSize(`Tags: ${proj.tags.join(", ")}`, maxWidth);
+            doc.text(tagsText, margin, yPos);
+            yPos += tagsText.length * 4 + 2;
+          }
+
+          if (proj.description) {
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(50);
+            const desc = doc.splitTextToSize(proj.description, maxWidth);
+            checkPageBreak(desc.length * 5 + 5);
+            doc.text(desc, margin, yPos);
+            yPos += desc.length * 5;
+          }
+          
+          yPos += 8;
+        });
+      }
+
+      const safeTitle = cv.positionTitle ? cv.positionTitle.replace(/[^a-zA-Z0-9-]/g, "-").replace(/-+/g, "-") : "cv";
+      doc.save(`${safeTitle}-cv.pdf`);
+    } catch (err) {
+      console.error("Failed to generate PDF", err);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -119,7 +290,30 @@ export function CvView() {
           )}
         </div>
         
-        <div className="flex items-center ml-4 shrink-0">
+        <div className="flex items-center ml-4 shrink-0 gap-3">
+          <button
+            onClick={handleDownloadPDF}
+            disabled={isGeneratingPdf}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+            title={t("cv.downloadPdf")}
+          >
+            {isGeneratingPdf ? (
+              <div className="w-4 h-4 rounded-full border-2 border-slate-400 border-t-transparent animate-spin" />
+            ) : (
+              <FileText className="w-4 h-4" />
+            )}
+            <span className="text-sm font-medium hidden sm:inline">{t("cv.downloadPdf")}</span>
+          </button>
+          
+          <button
+            onClick={handleDownloadCSV}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors"
+            title={t("cv.downloadCsv")}
+          >
+            <Download className="w-4 h-4" />
+            <span className="text-sm font-medium hidden sm:inline">{t("cv.downloadCsv")}</span>
+          </button>
+          
           {isRecruiterOrAdmin ? (
             <button
               onClick={toggleLike}

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Check, AlertCircle, Plus, RefreshCw } from "lucide-react";
 import api from "../lib/api";
 import { ProjectsTab } from "../components/profile/ProjectsTab";
+import { ImageUpload } from "../components/common/ImageUpload";
 
 type AttributeDataType = "STRING" | "TEXT" | "IMAGE" | "NUMERIC" | "DATE" | "PERIOD" | "BOOLEAN" | "ONE_OF_MANY";
 
@@ -96,8 +97,14 @@ function ProfileField({
           ))}
         </select>
       );
-    case "STRING":
     case "IMAGE":
+      return (
+        <ImageUpload
+          value={value}
+          onChange={onChange}
+        />
+      );
+    case "STRING":
     case "PERIOD":
     default:
       return (

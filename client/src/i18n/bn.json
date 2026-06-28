@@ -96,5 +96,14 @@
   "cv.projects": "প্রজেক্টসমূহ",
   "cv.empty": "খালি",
   "cv.saved": "সংরক্ষিত",
-  "cv.conflict": "কনফ্লিক্ট অথবা যোগ্য নয়।"
+  "cv.conflict": "কনফ্লিক্ট অথবা যোগ্য নয়।",
+  "cv.like": "লাইক",
+  "cv.unlike": "আনলাইক",
+  "cv.likesCount": "লাইক সংখ্যা",
+  "pos.detailsTab": "বিবরণ",
+  "pos.discussionTab": "আলোচনা",
+  "pos.post": "পোস্ট করুন",
+  "pos.writePost": "একটি পোস্ট লিখুন...",
+  "pos.noPosts": "এখনও কোনো পোস্ট নেই। প্রথম পোস্ট করে আলোচনা শুরু করুন!",
+  "pos.sending": "পাঠানো হচ্ছে..."
 }

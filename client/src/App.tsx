@@ -8,6 +8,7 @@ import { Search } from "./pages/Search";
 import { NotFound } from "./pages/NotFound";
 import { CvView } from "./pages/CvView";
 import { AttributeLibrary } from "./pages/AttributeLibrary";
+import { PositionDetail } from "./pages/PositionDetail";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="positions" element={<Positions />} />
+          <Route path="positions/:id" element={<PositionDetail />} />
           <Route path="profile" element={<Profile />} />
           <Route path="my-cvs" element={<MyCvs />} />
           <Route path="cvs/:id" element={<CvView />} />

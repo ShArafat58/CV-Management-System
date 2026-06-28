@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 interface PositionListItem {
   id: string;
@@ -82,12 +83,12 @@ export function PositionsTable({
                   </td>
                 )}
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <button
-                    onClick={() => onClickTitle(pos.id)}
-                    className="font-medium text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:underline transition-colors text-left"
+                  <Link
+                    to={`/positions/${pos.id}`}
+                    className="font-medium text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:underline transition-colors"
                   >
                     {pos.title}
-                  </button>
+                  </Link>
                   {pos.shortDescription && (
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 max-w-xs truncate">
                       {pos.shortDescription}

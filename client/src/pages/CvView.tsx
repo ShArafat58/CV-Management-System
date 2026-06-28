@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Heart } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import api from "../lib/api";
 import { CvField } from "../components/cvs/CvField";
+import { useAuth } from "../context/AuthContext";
 
 interface CvAttribute {
   attributeId: string;
@@ -40,18 +41,45 @@ export function CvView() {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
+  const { user } = useAuth();
+
   const [cv, setCv] = useState<CvDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const [likeData, setLikeData] = useState({ liked: false, count: 0 });
+  const [isLiking, setIsLiking] = useState(false);
 
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    api.get<CvDetail>(`/cvs/${id}`)
-      .then(res => setCv(res.data))
+    
+    Promise.all([
+      api.get<CvDetail>(`/cvs/${id}`),
+      api.get<{ liked: boolean; count: number }>(`/likes/${id}`)
+    ])
+      .then(([cvRes, likeRes]) => {
+        setCv(cvRes.data);
+        setLikeData(likeRes.data);
+      })
       .catch(err => setError(err.response?.data?.error || "Failed to load CV"))
       .finally(() => setLoading(false));
   }, [id]);
+
+  const toggleLike = async () => {
+    if (!id || isLiking) return;
+    setIsLiking(true);
+    try {
+      const res = await api.post<{ liked: boolean; count: number }>(`/likes/${id}/toggle`);
+      setLikeData(res.data);
+    } catch (err) {
+      console.error("Failed to toggle like", err);
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
+  const isRecruiterOrAdmin = user?.role === "RECRUITER" || user?.role === "ADMIN";
 
   if (loading) {
     return (
@@ -79,15 +107,40 @@ export function CvView() {
         Back to My CVs
       </button>
 
-      <header className="border-b border-slate-200 dark:border-slate-700 pb-6">
-        <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-          {cv.positionTitle}
-        </h1>
-        {cv.positionShortDescription && (
-          <p className="mt-2 text-lg text-slate-600 dark:text-slate-300">
-            {cv.positionShortDescription}
-          </p>
-        )}
+      <header className="border-b border-slate-200 dark:border-slate-700 pb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            {cv.positionTitle}
+          </h1>
+          {cv.positionShortDescription && (
+            <p className="mt-2 text-lg text-slate-600 dark:text-slate-300">
+              {cv.positionShortDescription}
+            </p>
+          )}
+        </div>
+        
+        <div className="flex items-center ml-4 shrink-0">
+          {isRecruiterOrAdmin ? (
+            <button
+              onClick={toggleLike}
+              disabled={isLiking}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors ${
+                likeData.liked 
+                  ? "bg-red-50 border-red-200 text-red-500 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400" 
+                  : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700"
+              }`}
+              title={likeData.liked ? t("cv.unlike") : t("cv.like")}
+            >
+              <Heart className={`w-5 h-5 ${likeData.liked ? "fill-current" : ""}`} />
+              <span className="font-medium">{likeData.count}</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300" title={t("cv.likesCount")}>
+              <Heart className="w-5 h-5" />
+              <span className="font-medium">{likeData.count}</span>
+            </div>
+          )}
+        </div>
       </header>
 
       <section>

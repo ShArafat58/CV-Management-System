@@ -96,5 +96,14 @@
   "cv.projects": "Projects",
   "cv.empty": "Empty",
   "cv.saved": "Saved",
-  "cv.conflict": "Conflict or not eligible."
+  "cv.conflict": "Conflict or not eligible.",
+  "cv.like": "Like",
+  "cv.unlike": "Unlike",
+  "cv.likesCount": "Likes count",
+  "pos.detailsTab": "Details",
+  "pos.discussionTab": "Discussion",
+  "pos.post": "Post",
+  "pos.writePost": "Write a post...",
+  "pos.noPosts": "No posts yet. Be the first to start the discussion!",
+  "pos.sending": "Sending..."
 }

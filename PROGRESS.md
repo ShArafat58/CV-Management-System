@@ -24,7 +24,7 @@
 
 ---
 
-## DONE (Step 1-6)
+## DONE (Step 1-8)
 
 ### Step 1 — Scaffold + Hello World Deploy
 - Monorepo: `client/` (React+Vite+TS) + `server/` (Express+TS)
@@ -64,7 +64,7 @@
 - i18n (react-i18next) -> English (default) + Bengali, language remembered in localStorage
 - `Header` -> logo, nav links, full-text search box (UI ready, wired later), theme toggle, language toggle, login dropdown (Google/GitHub), logout
 - `Layout` -> Header + `<Outlet/>`, responsive, light+dark
-- Routing (react-router) -> Home, Positions, Profile, MyCvs, Search, NotFound, Attributes
+- Routing (react-router) -> Home, Positions, Profile, MyCvs, Search, NotFound, Attributes, /cvs/:id
 - Removed gradient for clean sky-blue (to match Pavel's taste)
 - Tested full login flow from the frontend
 
@@ -101,22 +101,49 @@
   - **Projects:** table view + selection toolbar (no row buttons), modal with date range, markdown description (react-markdown live preview), tag autocomplete (react-tag-autocomplete, suggestions from /project-tags)
 - Tested: auto-save persists after refresh, optimistic locking, project create/edit/delete, markdown preview, tags
 
----
-
-## REMAINING (Step 7-12)
-
 ### Step 7 — Killer Feature #2: Positions
-- Recruiter creates/duplicates/edits/deletes positions (shared, no ownership)
-- Each position: title, description, access rules (public or filter), attributes, project tags, max projects
-- Access rules: operators depend on attribute type (>, =, checked, etc.)
-- **Table view + toolbar** (reuse the Step 5 pattern)
+- **Backend** `server/src/positionRoutes.ts` (mounted at `/api/positions`):
+  - GET `/` -> list with `?search=` (title contains), includes `_count.cvs` (no query in loop), select only (no SELECT *)
+  - GET `/:id` -> full detail: scalars + accessRules + attributes joined to Attribute, ordered by sortOrder
+  - POST `/` -> create (RECRUITER/ADMIN), creates PositionAttribute rows in a `$transaction`
+  - POST `/:id/duplicate` -> copy all fields ("Copy of ..."), reset version, copy attributes, in a `$transaction`
+  - PUT `/:id` -> update with **optimistic locking** (version check in `$transaction`, 409 on mismatch); attributeIds = full replacement (deleteMany then createMany)
+  - DELETE `/:id` -> cascade removes PositionAttribute/Cv/Post
+  - Positions are SHARED (any recruiter/admin can edit/delete, no ownership)
+- **Frontend** `client/src/pages/Positions.tsx` + `components/positions/`:
+  - **Table view** + selection toolbar (no row buttons): 0 -> New; 1 -> Edit/Duplicate/Delete; >1 -> Delete
+  - PositionModal: title, description, Public/Restricted toggle, attribute picker, project settings (maxProjects, projectTags)
+  - **AccessRuleEditor:** operators depend on attribute dataType (NUMERIC -> >,>=,<,<=,= ; BOOLEAN/ONE_OF_MANY -> = ; STRING/TEXT -> contains,= ; DATE -> >,<,=); value input adapts (number/select/date/checkbox)
+  - On edit: loads full detail via GET /:id; handles 409 version_conflict
+- Tested: create, access rules (operator/value change by type), duplicate, edit, refresh persists
 
 ### Step 8 — Killer Feature #3: CV Generation
-- CV auto-generated from: profile data + library attrs + filtered projects
-- Creating a CV from a position adds its attrs to the profile (if empty)
-- In-place edit (editing in CV updates the profile master value)
-- Empty values highlighted in red
-- Recruiter sees read-only, Admin can edit
+- **Backend** `server/src/cvRoutes.ts` (mounted at `/api/cvs`, all requireAuth):
+  - Helper `candidateMeetsAccessRules(profileValues, accessRules)` -> numeric ops parse both sides as numbers; "=" numeric-or-case-insensitive-string; "contains" substring; ALL rules AND
+  - GET `/` -> my CVs (position title + `_count.likes`)
+  - GET `/available-positions` -> positions that are public OR pass access rules, excluding ones I already have a CV for (loads profile + positions ONCE, filters in memory — no query in loop)
+  - POST `/` -> create CV; checks eligibility (403 not_eligible), one-per-position (409 cv_exists); adds position's attributes to profile with empty value via `createMany skipDuplicates` (computed in memory, no loop query)
+  - GET `/:id` -> assembled CV: owner/admin/recruiter may view; `canEdit` = owner or admin; attributes with profile value ("" if missing); projects filtered by position.projectTags, limited to maxProjects
+  - PUT `/:id/value` -> in-place edit writes the **master value into the owner's profile** (upsert AttributeValue); owner/admin only
+  - DELETE `/:id` -> owner/admin only
+- **Frontend** `client/src/pages/MyCvs.tsx`, `pages/CvView.tsx`, `components/cvs/`:
+  - My CVs: **table** + toolbar (no row buttons); New CV modal lists available positions; handles not_eligible / cv_exists
+  - CvView: structured CV document (not a table); each attribute inline-editable per dataType when canEdit, read-only for recruiters; saves on blur via PUT /:id/value
+  - **Empty values highlighted in RED** (editable and read-only) — requirement
+  - Projects section: read-only, markdown description via react-markdown, tags as chips
+- Tested: create CV (auto-fill), in-place edit reflects on Profile page (master value), table/toolbar, empty highlighting
+
+---
+
+## IMPORTANT FIX (Step 8) — Express req.user / req.isAuthenticated types
+- The `server/` folder had NO `tsconfig.json`, so TypeScript didn't load Passport/Express types -> `req.user`, `req.isAuthenticated` showed "does not exist" errors.
+- Fix: created `server/tsconfig.json` with `"types": ["node", "express", "passport"]`.
+- Augmented `Express.User` interface (id, email, role, etc.) inside a `declare global` block in `server/src/middleware.ts` (a real module that every route imports), NOT a standalone `.d.ts` (which wasn't being picked up).
+- `verbatimModuleSyntax` requires `import type { Request, Response, NextFunction }` in middleware.ts.
+
+---
+
+## REMAINING (Step 9-12)
 
 ### Step 9 — Discussions + Likes
 - Each position has a Discussion tab, Markdown posts, chronological
@@ -165,8 +192,10 @@
 - Build UI with the Antigravity agent, but verify every part (for defense)
 - If agent imports a library, make sure it's installed (`npm install <lib>`) or Vite throws "Failed to resolve import"
 - Watch import paths from the agent (e.g. `../../../lib/api` vs `../../lib/api`)
+- After the agent creates a new file, if the editor shows "Cannot find module", run "TypeScript: Restart TS Server" (Ctrl+Shift+P)
+- For req.params.id type errors, use `req.params.id as string`
 - Render free instance sleeps when idle, first load takes 30-50 seconds
 
 ---
 
-*Last updated: Step 6 (Personal Profile) complete. 6/12 done. Next: live deploy update OR Step 7 (Positions).*
+*Last updated: Step 8 (CV Generation) complete. 8/12 done — all three killer features built. Next: live deploy update OR Step 9 (Discussions + Likes).*

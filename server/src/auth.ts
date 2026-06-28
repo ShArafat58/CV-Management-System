@@ -2,7 +2,7 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as GitHubStrategy } from "passport-github2";
 import prisma from "./db.js";
-
+const BASE_URL = process.env.SERVER_URL || "http://localhost:3000";
 async function findOrCreateUser(
     provider: string,
     providerId: string,
@@ -31,7 +31,7 @@ passport.use(
         {
             clientID: process.env.GOOGLE_CLIENT_ID as string,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-            callbackURL: "/api/auth/google/callback",
+            callbackURL: `${BASE_URL}/api/auth/google/callback`,
         },
         async (_accessToken, _refreshToken, profile, done) => {
             try {
@@ -55,7 +55,7 @@ passport.use(
         {
             clientID: process.env.GITHUB_CLIENT_ID as string,
             clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
-            callbackURL: "/api/auth/github/callback",
+            callbackURL: `${BASE_URL}/api/auth/github/callback`,
         },
         async (_accessToken: string, _refreshToken: string, profile: any, done: any) => {
             try {

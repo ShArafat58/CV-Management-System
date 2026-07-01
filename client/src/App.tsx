@@ -10,6 +10,7 @@ import { CvView } from "./pages/CvView";
 import { AttributeLibrary } from "./pages/AttributeLibrary";
 import { PositionDetail } from "./pages/PositionDetail";
 import { AdminUsers } from "./pages/AdminUsers";
+import { PublicProfile } from "./pages/PublicProfile";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           <Route path="attributes" element={<AttributeLibrary />} />
           <Route path="search" element={<Search />} />
           <Route path="admin/users" element={<AdminUsers />} />
+          <Route path="users/:authorId" element={<PublicProfile />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

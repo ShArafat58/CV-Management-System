@@ -152,5 +152,15 @@
   "admin.accessDenied": "অ্যাক্সেস অস্বীকৃত",
   "admin.roleCandidate": "ক্যান্ডিডেট",
   "admin.roleRecruiter": "রিক্রুটার",
-  "admin.roleAdmin": "অ্যাডমিন"
+  "admin.roleAdmin": "অ্যাডমিন",
+  "public.memberSince": "সদস্য হয়েছেন",
+  "public.cvs": "সিভি",
+  "public.noCvs": "এখনো কোনো সিভি নেই",
+  "public.notFound": "ইউজার খুঁজে পাওয়া যায়নি",
+  "public.position": "পজিশন",
+  "public.likes": "লাইক",
+  "public.created": "তৈরি",
+  "public.roleCandidate": "ক্যান্ডিডেট",
+  "public.roleRecruiter": "রিক্রুটার",
+  "public.roleAdmin": "অ্যাডমিন"
 }

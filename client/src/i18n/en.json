@@ -152,5 +152,15 @@
   "admin.accessDenied": "Access denied",
   "admin.roleCandidate": "Candidate",
   "admin.roleRecruiter": "Recruiter",
-  "admin.roleAdmin": "Admin"
+  "admin.roleAdmin": "Admin",
+  "public.memberSince": "Member since",
+  "public.cvs": "CVs",
+  "public.noCvs": "No CVs yet",
+  "public.notFound": "User not found",
+  "public.position": "Position",
+  "public.likes": "Likes",
+  "public.created": "Created",
+  "public.roleCandidate": "Candidate",
+  "public.roleRecruiter": "Recruiter",
+  "public.roleAdmin": "Admin"
 }

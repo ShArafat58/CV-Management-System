@@ -75,6 +75,7 @@ router.get("/", requireAuth, async (req, res) => {
         createdAt: true,
         updatedAt: true,
         hidden: true,
+        published: true,
         _count: { select: { likes: true } },
       },
     });
@@ -87,6 +88,7 @@ router.get("/", requireAuth, async (req, res) => {
         createdAt: cv.createdAt,
         updatedAt: cv.updatedAt,
         hidden: cv.hidden,
+        published: cv.published,
         likesCount: cv._count.likes,
       }))
     );
@@ -219,6 +221,76 @@ router.post("/", requireAuth, async (req, res) => {
   }
 });
 
+router.patch("/:id/publish", requireAuth, async (req, res) => {
+  try {
+    const cvId = req.params.id as string;
+    const { published } = req.body;
+
+    if (typeof published !== "boolean") {
+      return res.status(400).json({ error: "published must be a boolean" });
+    }
+
+    const cv = await prisma.cv.findUnique({
+      where: { id: cvId },
+      include: {
+        position: {
+          include: {
+            attributes: {
+              include: { attribute: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!cv) {
+      return res.status(404).json({ error: "CV not found" });
+    }
+
+    const isOwner = cv.userId === req.user!.id;
+    const isAdmin = req.user!.role === "ADMIN";
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    if (published) {
+      const profile = await prisma.profile.findUnique({
+        where: { userId: cv.userId },
+        include: { values: true },
+      });
+
+      const profileValues: Record<string, string> = {};
+      if (profile) {
+        for (const val of profile.values) {
+          profileValues[val.attributeId] = val.value;
+        }
+      }
+
+      const missing: string[] = [];
+      for (const pa of cv.position.attributes) {
+        const val = profileValues[pa.attributeId];
+        if (!val || val.trim() === "") {
+          missing.push(pa.attribute.name);
+        }
+      }
+
+      if (missing.length > 0) {
+        return res.status(400).json({ error: "incomplete", missing });
+      }
+    }
+
+    await prisma.cv.update({
+      where: { id: cvId },
+      data: { published },
+    });
+
+    res.json({ id: cvId, published });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update publish status" });
+  }
+});
+
 router.get("/:id", requireAuth, async (req, res) => {
   try {
     const cvId = req.params.id as string;
@@ -246,6 +318,10 @@ router.get("/:id", requireAuth, async (req, res) => {
 
     if (!isOwner && !isAdmin && !isRecruiter) {
       return res.status(403).json({ error: "Forbidden" });
+    }
+
+    if (isRecruiter && !isOwner && !cv.published) {
+      return res.status(404).json({ error: "not_found" });
     }
 
     const canEdit = isOwner || isAdmin;
@@ -298,6 +374,7 @@ router.get("/:id", requireAuth, async (req, res) => {
       positionTitle: cv.position.title,
       positionShortDescription: cv.position.shortDescription,
       ownerId: cv.userId,
+      published: cv.published,
       canEdit,
       attributes,
       projects: projects.map((p) => ({
@@ -411,7 +488,7 @@ router.get("/by-position/:positionId", requireAuth, async (req, res) => {
     }
 
     const cvs = await prisma.cv.findMany({
-      where: { positionId },
+      where: { positionId, published: true },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,

@@ -170,5 +170,11 @@
   "pos.candidate": "ক্যান্ডিডেট",
   "pos.noCvsForPosition": "এই পজিশনের জন্য এখনো কোনো সিভি জমা পড়েনি।",
   "pos.likes": "লাইক",
-  "pos.created": "তৈরি"
+  "pos.created": "তৈরি",
+  "cv.draft": "খসড়া",
+  "cv.published": "প্রকাশিত",
+  "cv.publish": "প্রকাশ করুন",
+  "cv.unpublish": "প্রকাশ বাতিল",
+  "cv.publishHint": "প্রকাশ করতে সব ঘর পূরণ করুন",
+  "cv.incomplete": "কিছু ঘর এখনো খালি"
 }

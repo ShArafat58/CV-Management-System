@@ -24,8 +24,18 @@ router.get("/:userId", async (req, res) => {
             return res.status(404).json({ error: "User not found" });
         }
 
+        const viewerId = req.user!.id;
+        const viewerRole = req.user!.role;
+        const isOwner = viewerId === userId;
+        const isAdmin = viewerRole === "ADMIN";
+
+        const cvWhere: { userId: string; published?: boolean } = { userId };
+        if (!isOwner && !isAdmin) {
+            cvWhere.published = true;
+        }
+
         const cvs = await prisma.cv.findMany({
-            where: { userId },
+            where: cvWhere,
             select: {
                 id: true,
                 positionId: true,
@@ -56,7 +66,6 @@ router.get("/:userId", async (req, res) => {
             cvs: formattedCvs,
         });
     } catch (error) {
-        console.error(error);
         res.status(500).json({ error: "Internal server error" });
     }
 });

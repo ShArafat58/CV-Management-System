@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Heart, Download, FileText } from "lucide-react";
+import { ArrowLeft, Heart, Download, FileText, Eye, EyeOff } from "lucide-react";
 import Papa from "papaparse";
 import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
@@ -34,6 +34,7 @@ interface CvDetail {
   positionTitle: string;
   positionShortDescription: string;
   ownerId: string;
+  published: boolean;
   canEdit: boolean;
   attributes: CvAttribute[];
   projects: CvProject[];
@@ -49,21 +50,24 @@ export function CvView() {
   const [cv, setCv] = useState<CvDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [likeData, setLikeData] = useState({ liked: false, count: 0 });
   const [isLiking, setIsLiking] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [published, setPublished] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    
+
     Promise.all([
       api.get<CvDetail>(`/cvs/${id}`),
       api.get<{ liked: boolean; count: number }>(`/likes/${id}`)
     ])
       .then(([cvRes, likeRes]) => {
         setCv(cvRes.data);
+        setPublished(cvRes.data.published);
         setLikeData(likeRes.data);
       })
       .catch(err => setError(err.response?.data?.error || "Failed to load CV"))
@@ -84,6 +88,25 @@ export function CvView() {
   };
 
   const isRecruiterOrAdmin = user?.role === "RECRUITER" || user?.role === "ADMIN";
+
+  const allFilled = cv ? cv.attributes.every((a) => a.value.trim() !== "") : false;
+
+  const handlePublishToggle = async () => {
+    if (!cv) return;
+    setPublishError(null);
+    try {
+      const res = await api.patch<{ id: string; published: boolean }>(`/cvs/${cv.id}/publish`, {
+        published: !published,
+      });
+      setPublished(res.data.published);
+    } catch (err: any) {
+      if (err.response?.data?.error === "incomplete") {
+        setPublishError(t("cv.incomplete"));
+      } else {
+        setPublishError(err.response?.data?.error || "Failed");
+      }
+    }
+  };
 
   const handleDownloadCSV = () => {
     if (!cv) return;
@@ -146,7 +169,7 @@ export function CvView() {
       const qrUrl = `${window.location.origin}/cvs/${cv.id}`;
       const qrDataUrl = await QRCode.toDataURL(qrUrl, { margin: 1 });
       const qrSize = 25;
-      
+
       doc.addImage(qrDataUrl, "PNG", pageWidth - margin - qrSize, margin, qrSize, qrSize);
       doc.setFontSize(8);
       doc.setTextColor(150);
@@ -181,7 +204,7 @@ export function CvView() {
         doc.setFontSize(11);
         doc.setFont("helvetica", "normal");
         doc.setTextColor(50);
-        
+
         cv.attributes.forEach((attr) => {
           const val = attr.value ? attr.value : "(empty)";
           const line = `${attr.name}: ${val}`;
@@ -190,7 +213,7 @@ export function CvView() {
           doc.text(splitLine, margin, yPos);
           yPos += splitLine.length * 5 + 2;
         });
-        
+
         yPos += 8;
       }
 
@@ -204,7 +227,7 @@ export function CvView() {
 
         cv.projects.forEach((proj) => {
           checkPageBreak(25);
-          
+
           doc.setFontSize(12);
           doc.setFont("helvetica", "bold");
           doc.setTextColor(0);
@@ -238,7 +261,7 @@ export function CvView() {
             doc.text(desc, margin, yPos);
             yPos += desc.length * 5;
           }
-          
+
           yPos += 8;
         });
       }
@@ -289,8 +312,42 @@ export function CvView() {
             </p>
           )}
         </div>
-        
+
         <div className="flex items-center ml-4 shrink-0 gap-3">
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${published
+              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+              : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+              }`}
+          >
+            {published ? t("cv.published") : t("cv.draft")}
+          </span>
+
+          {cv.canEdit && (
+            <div className="flex flex-col items-end gap-1">
+              <button
+                onClick={handlePublishToggle}
+                disabled={!published && !allFilled}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${published
+                  ? "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-900/40"
+                  : "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                  }`}
+              >
+                {published ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {published ? t("cv.unpublish") : t("cv.publish")}
+              </button>
+              {!published && !allFilled && (
+                <span className="text-xs text-amber-600 dark:text-amber-400">
+                  {t("cv.publishHint")}
+                </span>
+              )}
+              {publishError && (
+                <span className="text-xs text-red-500 dark:text-red-400">
+                  {publishError}
+                </span>
+              )}
+            </div>
+          )}
           <button
             onClick={handleDownloadPDF}
             disabled={isGeneratingPdf}
@@ -304,7 +361,7 @@ export function CvView() {
             )}
             <span className="text-sm font-medium hidden sm:inline">{t("cv.downloadPdf")}</span>
           </button>
-          
+
           <button
             onClick={handleDownloadCSV}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors"
@@ -313,16 +370,15 @@ export function CvView() {
             <Download className="w-4 h-4" />
             <span className="text-sm font-medium hidden sm:inline">{t("cv.downloadCsv")}</span>
           </button>
-          
+
           {isRecruiterOrAdmin ? (
             <button
               onClick={toggleLike}
               disabled={isLiking}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors ${
-                likeData.liked 
-                  ? "bg-red-50 border-red-200 text-red-500 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400" 
-                  : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700"
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors ${likeData.liked
+                ? "bg-red-50 border-red-200 text-red-500 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400"
+                : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700"
+                }`}
               title={likeData.liked ? t("cv.unlike") : t("cv.like")}
             >
               <Heart className={`w-5 h-5 ${likeData.liked ? "fill-current" : ""}`} />
@@ -351,6 +407,18 @@ export function CvView() {
               cvId={cv.id}
               attribute={attr}
               canEdit={cv.canEdit}
+              onValueSaved={(attributeId, newValue) => {
+                setCv((prev) =>
+                  prev
+                    ? {
+                      ...prev,
+                      attributes: prev.attributes.map((a) =>
+                        a.attributeId === attributeId ? { ...a, value: newValue } : a
+                      ),
+                    }
+                    : prev
+                );
+              }}
             />
           ))}
         </div>
@@ -372,16 +440,16 @@ export function CvView() {
                     {proj.name}
                   </h3>
                   <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1 sm:mt-0 bg-slate-100 dark:bg-slate-900/50 px-3 py-1 rounded-full">
-                    {proj.startDate ? new Date(proj.startDate).toLocaleDateString() : "—"} 
-                    {" – "} 
+                    {proj.startDate ? new Date(proj.startDate).toLocaleDateString() : "—"}
+                    {" – "}
                     {proj.endDate ? new Date(proj.endDate).toLocaleDateString() : "Present"}
                   </div>
                 </header>
-                
+
                 <div className="prose dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 text-sm mb-4">
                   <ReactMarkdown>{proj.description || "*No description provided.*"}</ReactMarkdown>
                 </div>
-                
+
                 {proj.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {proj.tags.map(tag => (

@@ -17,9 +17,10 @@ interface CvFieldProps {
   cvId: string;
   attribute: CvAttribute;
   canEdit: boolean;
+  onValueSaved?: (attributeId: string, value: string) => void;
 }
 
-export function CvField({ cvId, attribute, canEdit }: CvFieldProps) {
+export function CvField({ cvId, attribute, canEdit, onValueSaved }: CvFieldProps) {
   const { t } = useTranslation();
   const [value, setValue] = useState(attribute.value);
   const [saving, setSaving] = useState(false);
@@ -38,6 +39,7 @@ export function CvField({ cvId, attribute, canEdit }: CvFieldProps) {
         attributeId: attribute.attributeId,
         value: newValue,
       });
+      onValueSaved?.(attribute.attributeId, newValue);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (error) {
@@ -54,11 +56,10 @@ export function CvField({ cvId, attribute, canEdit }: CvFieldProps) {
   const isEmpty = value.trim() === "";
 
   const renderEditable = () => {
-    const inputClass = `w-full p-2 border rounded bg-transparent focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-900 dark:text-white transition-colors ${
-      isEmpty
-        ? "border-red-400 placeholder-red-400 dark:border-red-500"
-        : "border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500"
-    }`;
+    const inputClass = `w-full p-2 border rounded bg-transparent focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-900 dark:text-white transition-colors ${isEmpty
+      ? "border-red-400 placeholder-red-400 dark:border-red-500"
+      : "border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500"
+      }`;
 
     switch (attribute.dataType) {
       case "TEXT":
@@ -98,9 +99,8 @@ export function CvField({ cvId, attribute, canEdit }: CvFieldProps) {
           <div className="flex items-center h-full pt-2">
             <input
               type="checkbox"
-              className={`w-5 h-5 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800 ${
-                isEmpty ? "ring-2 ring-red-400" : ""
-              }`}
+              className={`w-5 h-5 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800 ${isEmpty ? "ring-2 ring-red-400" : ""
+                }`}
               checked={value === "true"}
               onChange={(e) => {
                 const checked = e.target.checked;
@@ -158,7 +158,7 @@ export function CvField({ cvId, attribute, canEdit }: CvFieldProps) {
 
   const renderReadOnly = () => {
     if (attribute.dataType === "IMAGE") {
-      return <ImageUpload value={value} onChange={() => {}} disabled />;
+      return <ImageUpload value={value} onChange={() => { }} disabled />;
     }
 
     if (isEmpty) {

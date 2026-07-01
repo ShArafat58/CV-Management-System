@@ -170,5 +170,11 @@
   "pos.candidate": "Candidate",
   "pos.noCvsForPosition": "No CVs submitted for this position yet.",
   "pos.likes": "Likes",
-  "pos.created": "Created"
+  "pos.created": "Created",
+  "cv.draft": "Draft",
+  "cv.published": "Published",
+  "cv.publish": "Publish",
+  "cv.unpublish": "Unpublish",
+  "cv.publishHint": "Fill all fields to publish",
+  "cv.incomplete": "Some fields are still empty"
 }

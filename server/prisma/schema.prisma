@@ -131,6 +131,7 @@ model Cv {
   positionId   String
   position     Position  @relation(fields: [positionId], references: [id], onDelete: Cascade)
   hidden       Boolean   @default(false)
+  published    Boolean   @default(false)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 

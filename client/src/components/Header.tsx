@@ -52,6 +52,9 @@ export function Header() {
               <Link to="/profile" className="text-slate-600 dark:text-slate-300 hover:text-sky-500 dark:hover:text-sky-400 transition-colors">{t("nav.profile")}</Link>
               <Link to="/my-cvs" className="text-slate-600 dark:text-slate-300 hover:text-sky-500 dark:hover:text-sky-400 transition-colors">{t("nav.myCvs")}</Link>
               <Link to="/attributes" className="text-slate-600 dark:text-slate-300 hover:text-sky-500 dark:hover:text-sky-400 transition-colors">{t("nav.attributes")}</Link>
+              {user?.role === "ADMIN" && (
+                <Link to="/admin/users" className="text-slate-600 dark:text-slate-300 hover:text-sky-500 dark:hover:text-sky-400 transition-colors">{t("nav.admin")}</Link>
+              )}
             </nav>
           </div>
 

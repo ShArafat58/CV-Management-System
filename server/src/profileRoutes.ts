@@ -15,7 +15,7 @@ function getTargetUserId(req: any) {
 router.get("/", requireAuth, async (req, res) => {
   try {
     const userId = getTargetUserId(req);
-    
+
     let profile = await prisma.profile.findUnique({
       where: { userId },
       include: {
@@ -87,12 +87,12 @@ router.put("/values", requireAuth, async (req, res) => {
   try {
     const userId = getTargetUserId(req);
     const { version, values } = req.body;
-    
+
     if (typeof version !== "number") {
-       return res.status(400).json({ error: "Version must be a number" });
+      return res.status(400).json({ error: "Version must be a number" });
     }
     if (!Array.isArray(values)) {
-       return res.status(400).json({ error: "Values must be an array" });
+      return res.status(400).json({ error: "Values must be an array" });
     }
 
     const result = await prisma.$transaction(async (tx) => {
@@ -183,17 +183,17 @@ router.post("/projects", requireAuth, async (req, res) => {
 
 router.put("/projects/:id", requireAuth, async (req, res) => {
   try {
-    const projectId = req.params.id;
+    const projectId = req.params.id as string;
     const userId = getTargetUserId(req);
     const profile = await prisma.profile.findUnique({ where: { userId } });
-    
+
     if (!profile) {
       return res.status(404).json({ error: "Profile not found" });
     }
 
     const existingProject = await prisma.project.findUnique({ where: { id: projectId } });
     if (!existingProject || existingProject.profileId !== profile.id) {
-       return res.status(404).json({ error: "Project not found" });
+      return res.status(404).json({ error: "Project not found" });
     }
 
     const { name, startDate, endDate, description, tags } = req.body;
@@ -219,17 +219,17 @@ router.put("/projects/:id", requireAuth, async (req, res) => {
 
 router.delete("/projects/:id", requireAuth, async (req, res) => {
   try {
-    const projectId = req.params.id;
+    const projectId = req.params.id as string;
     const userId = getTargetUserId(req);
     const profile = await prisma.profile.findUnique({ where: { userId } });
-    
+
     if (!profile) {
       return res.status(404).json({ error: "Profile not found" });
     }
 
     const existingProject = await prisma.project.findUnique({ where: { id: projectId } });
     if (!existingProject || existingProject.profileId !== profile.id) {
-       return res.status(404).json({ error: "Project not found" });
+      return res.status(404).json({ error: "Project not found" });
     }
 
     await prisma.project.delete({ where: { id: projectId } });
@@ -243,9 +243,9 @@ router.get("/project-tags", requireAuth, async (req, res) => {
   try {
     const userId = getTargetUserId(req);
     const profile = await prisma.profile.findUnique({ where: { userId } });
-    
+
     if (!profile) {
-       return res.json([]);
+      return res.json([]);
     }
 
     const projects = await prisma.project.findMany({

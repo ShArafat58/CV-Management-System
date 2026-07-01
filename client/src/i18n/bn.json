@@ -135,5 +135,22 @@
   "common.uploadImage": "ছবি আপলোড করুন",
   "common.uploading": "আপলোড হচ্ছে...",
   "common.removeImage": "মুছে ফেলুন",
-  "common.noPhoto": "কোনো ছবি নেই"
+  "common.noPhoto": "কোনো ছবি নেই",
+  "nav.admin": "অ্যাডমিন",
+  "admin.title": "ইউজার ম্যানেজমেন্ট",
+  "admin.search": "ইউজার খুঁজুন...",
+  "admin.name": "নাম",
+  "admin.email": "ইমেইল",
+  "admin.role": "রোল",
+  "admin.status": "স্ট্যাটাস",
+  "admin.joined": "যোগদানের তারিখ",
+  "admin.active": "সক্রিয়",
+  "admin.blocked": "ব্লকড",
+  "admin.block": "ব্লক",
+  "admin.unblock": "আনব্লক",
+  "admin.selectHint": "পরিচালনা করতে একজন ইউজার নির্বাচন করুন",
+  "admin.accessDenied": "অ্যাক্সেস অস্বীকৃত",
+  "admin.roleCandidate": "ক্যান্ডিডেট",
+  "admin.roleRecruiter": "রিক্রুটার",
+  "admin.roleAdmin": "অ্যাডমিন"
 }

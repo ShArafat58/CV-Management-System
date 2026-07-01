@@ -15,6 +15,7 @@ import discussionRoutes from "./discussionRoutes.js";
 import likeRoutes from "./likeRoutes.js";
 import homeRoutes from "./homeRoutes.js";
 import searchRoutes from "./searchRoutes.js";
+import userRoutes from "./userRoutes.js";
 import { setIo } from "./socket.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -74,6 +75,7 @@ app.use("/api/discussions", discussionRoutes);
 app.use("/api/likes", likeRoutes);
 app.use("/api/home", homeRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/users", userRoutes);
 
 app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", message: "Hello from the server" });

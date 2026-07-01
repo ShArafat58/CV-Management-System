@@ -135,5 +135,22 @@
   "common.uploadImage": "Upload Image",
   "common.uploading": "Uploading...",
   "common.removeImage": "Remove",
-  "common.noPhoto": "No photo"
+  "common.noPhoto": "No photo",
+  "nav.admin": "Admin",
+  "admin.title": "User Management",
+  "admin.search": "Search users...",
+  "admin.name": "Name",
+  "admin.email": "Email",
+  "admin.role": "Role",
+  "admin.status": "Status",
+  "admin.joined": "Joined",
+  "admin.active": "Active",
+  "admin.blocked": "Blocked",
+  "admin.block": "Block",
+  "admin.unblock": "Unblock",
+  "admin.selectHint": "Select a user to manage",
+  "admin.accessDenied": "Access denied",
+  "admin.roleCandidate": "Candidate",
+  "admin.roleRecruiter": "Recruiter",
+  "admin.roleAdmin": "Admin"
 }

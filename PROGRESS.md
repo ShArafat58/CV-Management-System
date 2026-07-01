@@ -5,7 +5,7 @@
 **GitHub:** https://github.com/ShArafat58/CV-Management-System
 **Live (Render):** https://cv-management-system-zlfk.onrender.com
 
-**STATUS: ALL 12 STEPS COMPLETE — core done + optional extras + live deployed.**
+**STATUS: COMPLETE — all 12 steps + live deploy + image upload + admin/user-management + public profiles. Aligned with instructor's clarifications.**
 
 ---
 
@@ -22,7 +22,7 @@
 | Realtime | Socket.IO | For discussions |
 | Deploy | Render (single web service) | Server serves the built client |
 
-**Key libraries added:** axios, react-router-dom, react-i18next, lucide-react, react-markdown, react-tag-autocomplete, date-fns, socket.io / socket.io-client, papaparse (CSV), jspdf (PDF), qrcode (QR)
+**Key libraries added:** axios, react-router-dom, react-i18next, lucide-react, react-markdown, react-tag-autocomplete, date-fns, socket.io / socket.io-client, papaparse (CSV), jspdf (PDF), qrcode (QR), react-dropzone (image picker) + Cloudinary unsigned upload
 
 ---
 
@@ -135,6 +135,35 @@
 
 ---
 
+## POST-FEEDBACK WORK (added after instructor clarifications)
+
+Instructor (Pavel) posted several clarifications. Reviewed the project against them — most were already satisfied (CV is "almost virtual": content looked up from attributes/projects, never copied into the CV; edits reflect everywhere; ORM used; optimistic locking with version field; candidates can't create attributes, only fill them; attribute library is global). Added the missing pieces below.
+
+### Image upload for Personal Photo (was a plain text box — a real gap)
+- `client/src/components/common/ImageUpload.tsx`: reusable uploader using **react-dropzone** (ready-made component). Image goes **directly from the browser to Cloudinary** (unsigned upload, `POST` FormData with `upload_preset`) — never touches our server. We store only the returned `secure_url` as the attribute value.
+- Wired into Profile "Me" tab and CvView for `dataType === "IMAGE"`; recruiter view read-only thumbnail; empty shows red "Empty".
+- Cloudinary config in client `.env` (`VITE_CLOUDINARY_CLOUD_NAME`, `VITE_CLOUDINARY_UPLOAD_PRESET`); same two vars set in Render for production. Cloud name `du7pcftff`, preset `cv_upload` (unsigned).
+
+### Admin — User Management (`/admin/users`, admin-only)
+- **Backend** `server/src/userRoutes.ts` (`/api/users`, `requireAuth` + `requireRole("ADMIN")` on the whole router): GET `/` (list + `?search=` on name/email, select only), PATCH `/:id/role` (validates role enum), PATCH `/:id/block` (boolean). Only ever `update()`, never `delete()` — changing role/blocking never deletes the account ("kick a student, don't kill the student"). Self-demotion is allowed (instructor: once an admin removes their own admin role, they can't get it back except via DB — intentional).
+- **Frontend** `client/src/pages/AdminUsers.tsx`: table + checkbox/toolbar (no row buttons); single-select -> role dropdown + Block/Unblock button (inline style colors so it's clearly visible). Admin nav link in Header rendered ONLY when `user?.role === "ADMIN"`. Route `/admin/users`; "Access denied" shown if a non-admin reaches it.
+
+### Public profile page (`/users/:authorId`)
+- **Backend** `server/src/publicProfileRoutes.ts` (`/api/public-profile/:userId`, `requireAuth` — a SEPARATE router, NOT behind the admin guard): returns public-safe user info (id, displayName, role, createdAt) + that user's CVs (id, positionTitle, createdAt, likesCount via `_count`, no loop query). No sensitive attribute values.
+- **Frontend** `client/src/pages/PublicProfile.tsx`: header card (name, role badge, member-since) + CVs table (position title links to `/cvs/:id`). This is the page the discussion "author name" link (recruiter view) points to.
+
+### Blocked-user screen
+- `client/src/components/Layout.tsx`: if `user?.blocked`, render a clean full-screen "Account Blocked" message + logout button (no header/nav) instead of the app. (Backend already blocked them via middleware 403; this makes the UX clear.)
+
+### Position CVs tab (recruiter browse)
+- **Backend** added `GET /api/cvs/by-position/:positionId` in cvRoutes.ts (RECRUITER/ADMIN only): all CVs for a position with candidateName + likesCount (`_count`, no loop query).
+- **Frontend** PositionDetail.tsx: third "CVs" tab, visible ONLY to recruiter/admin; table lists candidate (links to `/users/:candidateId`), View CV (links to `/cvs/:id`), likes, created. Lets recruiters browse all CVs submitted for a position.
+
+### Note for later (instructor warning)
+- Up to 3 third-party integrations will be required later. Don't turn this into a "store"/"blog" — keep it a CV system. (No action now; just awareness.)
+
+---
+
 ## IMPORTANT FIX — Express req.user / req.isAuthenticated types (Step 8)
 - `server/` had NO `tsconfig.json` -> Passport/Express types not loaded -> `req.user`, `req.isAuthenticated` "does not exist" errors.
 - Fix: created `server/tsconfig.json` with `"types": ["node", "express", "passport"]`.
@@ -182,4 +211,4 @@ Live and verified at https://cv-management-system-zlfk.onrender.com — Google +
 
 ---
 
-*Last updated: ALL 12 STEPS COMPLETE — core + optional CSV/PDF/QR done, live deployed and verified. Next focus: defense prep (understand every line; be ready to change code live).*
+*Last updated: COMPLETE — all 12 steps + optional CSV/PDF/QR + image upload + admin user management + public profile + blocked screen + position CVs tab. Live deployed and verified. Reviewed against instructor clarifications. Next focus: defense prep (understand every line; be ready to change code live).*

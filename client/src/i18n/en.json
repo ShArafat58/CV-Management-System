@@ -162,5 +162,13 @@
   "public.created": "Created",
   "public.roleCandidate": "Candidate",
   "public.roleRecruiter": "Recruiter",
-  "public.roleAdmin": "Admin"
+  "public.roleAdmin": "Admin",
+  "blocked.title": "Account Blocked",
+  "blocked.message": "Your account has been blocked. Please contact an administrator.",
+  "pos.cvsTab": "CVs",
+  "pos.viewCv": "View CV",
+  "pos.candidate": "Candidate",
+  "pos.noCvsForPosition": "No CVs submitted for this position yet.",
+  "pos.likes": "Likes",
+  "pos.created": "Created"
 }

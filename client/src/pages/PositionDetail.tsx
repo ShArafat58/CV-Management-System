@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { format } from "date-fns";
 import api from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 import { Discussion } from "../components/discussions/Discussion";
 
 interface AttributeDetail {
@@ -29,11 +31,44 @@ interface PositionDetailData {
   attributes: AttributeDetail[];
 }
 
+interface PositionCv {
+  id: string;
+  candidateId: string;
+  candidateName: string;
+  createdAt: string;
+  likesCount: number;
+}
+
 export function PositionDetail() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [position, setPosition] = useState<PositionDetailData | null>(null);
-  const [activeTab, setActiveTab] = useState<"details" | "discussion">("details");
+  const [activeTab, setActiveTab] = useState<"details" | "discussion" | "cvs">("details");
+  const [cvs, setCvs] = useState<PositionCv[]>([]);
+  const [cvsLoading, setCvsLoading] = useState(false);
+  const [cvsFetched, setCvsFetched] = useState(false);
+  const canSeeCvs = user?.role === "RECRUITER" || user?.role === "ADMIN";
+
+  const fetchCvs = useCallback(async () => {
+    if (!id || cvsFetched) return;
+    try {
+      setCvsLoading(true);
+      const res = await api.get<PositionCv[]>(`/cvs/by-position/${id}`);
+      setCvs(res.data);
+      setCvsFetched(true);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setCvsLoading(false);
+    }
+  }, [id, cvsFetched]);
+
+  useEffect(() => {
+    if (activeTab === "cvs" && canSeeCvs) {
+      fetchCvs();
+    }
+  }, [activeTab, canSeeCvs, fetchCvs]);
 
   useEffect(() => {
     const fetchPosition = async () => {
@@ -93,6 +128,18 @@ export function PositionDetail() {
           >
             {t("pos.discussionTab")}
           </button>
+          {canSeeCvs && (
+            <button
+              onClick={() => setActiveTab("cvs")}
+              className={`pb-2 px-1 text-sm font-medium transition-colors ${
+                activeTab === "cvs"
+                  ? "text-sky-600 dark:text-sky-400 border-b-2 border-sky-600 dark:border-sky-400"
+                  : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
+            >
+              {t("pos.cvsTab")}
+            </button>
+          )}
         </div>
       </div>
 
@@ -148,6 +195,63 @@ export function PositionDetail() {
       )}
 
       {activeTab === "discussion" && <Discussion positionId={position.id} />}
+
+      {activeTab === "cvs" && canSeeCvs && (
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+          {cvsLoading ? (
+            <div className="flex justify-center p-8">
+              <div className="w-6 h-6 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : cvs.length === 0 ? (
+            <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+              {t("pos.noCvsForPosition")}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                <thead className="bg-slate-50 dark:bg-slate-800/50">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      {t("pos.candidate")}
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      CV
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      {t("pos.likes")}
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      {t("pos.created")}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+                  {cvs.map((cv) => (
+                    <tr key={cv.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Link to={`/users/${cv.candidateId}`} className="text-sky-600 dark:text-sky-400 font-medium hover:underline">
+                          {cv.candidateName}
+                        </Link>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Link to={`/cvs/${cv.id}`} className="text-sky-600 dark:text-sky-400 font-medium hover:underline">
+                          {t("pos.viewCv")}
+                        </Link>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
+                        {cv.likesCount}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
+                        {format(new Date(cv.createdAt), "MMM d, yyyy")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

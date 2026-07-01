@@ -394,5 +394,44 @@ router.delete("/:id", requireAuth, async (req, res) => {
     res.status(500).json({ error: "Failed to delete CV" });
   }
 });
+router.get("/by-position/:positionId", requireAuth, async (req, res) => {
+  try {
+    const positionId = req.params.positionId as string;
+    const role = req.user!.role;
+    if (role !== "RECRUITER" && role !== "ADMIN") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
 
+    const position = await prisma.position.findUnique({
+      where: { id: positionId },
+      select: { id: true, title: true },
+    });
+    if (!position) {
+      return res.status(404).json({ error: "Position not found" });
+    }
+
+    const cvs = await prisma.cv.findMany({
+      where: { positionId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        createdAt: true,
+        user: { select: { id: true, displayName: true } },
+        _count: { select: { likes: true } },
+      },
+    });
+
+    res.json(
+      cvs.map((cv) => ({
+        id: cv.id,
+        candidateId: cv.user.id,
+        candidateName: cv.user.displayName,
+        createdAt: cv.createdAt,
+        likesCount: cv._count.likes,
+      }))
+    );
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch position CVs" });
+  }
+});
 export default router;

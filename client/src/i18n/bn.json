@@ -162,5 +162,13 @@
   "public.created": "তৈরি",
   "public.roleCandidate": "ক্যান্ডিডেট",
   "public.roleRecruiter": "রিক্রুটার",
-  "public.roleAdmin": "অ্যাডমিন"
+  "public.roleAdmin": "অ্যাডমিন",
+  "blocked.title": "অ্যাকাউন্ট ব্লকড",
+  "blocked.message": "আপনার অ্যাকাউন্ট ব্লক করা হয়েছে। অনুগ্রহ করে একজন অ্যাডমিনের সাথে যোগাযোগ করুন।",
+  "pos.cvsTab": "সিভি",
+  "pos.viewCv": "সিভি দেখুন",
+  "pos.candidate": "ক্যান্ডিডেট",
+  "pos.noCvsForPosition": "এই পজিশনের জন্য এখনো কোনো সিভি জমা পড়েনি।",
+  "pos.likes": "লাইক",
+  "pos.created": "তৈরি"
 }

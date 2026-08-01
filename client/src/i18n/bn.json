@@ -190,5 +190,19 @@
   "sf.sync": "সিঙ্ক",
   "sf.syncing": "সিঙ্ক হচ্ছে...",
   "sf.success": "সেলসফোর্সে সফলভাবে তৈরি হয়েছে",
-  "sf.failed": "সিঙ্ক ব্যর্থ হয়েছে"
+  "sf.failed": "সিঙ্ক ব্যর্থ হয়েছে",
+  "ticket.button": "সাপোর্ট টিকিট তৈরি করুন",
+  "ticket.help": "সহায়তা",
+  "ticket.title": "সাপোর্ট টিকিট তৈরি করুন",
+  "ticket.reportedBy": "রিপোর্ট করেছেন",
+  "ticket.link": "পেজ",
+  "ticket.summary": "সারসংক্ষেপ",
+  "ticket.priority": "অগ্রাধিকার",
+  "ticket.high": "উচ্চ",
+  "ticket.average": "মাঝারি",
+  "ticket.low": "নিম্ন",
+  "ticket.send": "পাঠান",
+  "ticket.sending": "পাঠানো হচ্ছে...",
+  "ticket.success": "সাপোর্ট টিকিট জমা হয়েছে",
+  "ticket.failed": "টিকিট জমা দিতে ব্যর্থ"
 }

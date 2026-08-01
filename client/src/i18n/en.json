@@ -190,5 +190,19 @@
   "sf.sync": "Sync",
   "sf.syncing": "Syncing...",
   "sf.success": "Successfully created in Salesforce",
-  "sf.failed": "Sync failed"
+  "sf.failed": "Sync failed",
+  "ticket.button": "Create support ticket",
+  "ticket.help": "Help",
+  "ticket.title": "Create support ticket",
+  "ticket.reportedBy": "Reported by",
+  "ticket.link": "Page",
+  "ticket.summary": "Summary",
+  "ticket.priority": "Priority",
+  "ticket.high": "High",
+  "ticket.average": "Average",
+  "ticket.low": "Low",
+  "ticket.send": "Send",
+  "ticket.sending": "Sending...",
+  "ticket.success": "Support ticket submitted",
+  "ticket.failed": "Failed to submit ticket"
 }

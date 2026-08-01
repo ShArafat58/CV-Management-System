@@ -19,6 +19,7 @@ import userRoutes from "./userRoutes.js";
 import publicProfileRoutes from "./publicProfileRoutes.js";
 import { setIo } from "./socket.js";
 import salesforceRoutes from "./salesforceRoutes.js";
+import ticketRoutes from "./ticketRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -67,6 +68,7 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
+app.use("/api/tickets", ticketRoutes);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/attributes", attributeRoutes);

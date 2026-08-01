@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, AlertCircle, Plus, RefreshCw } from "lucide-react";
+import { Check, AlertCircle, Plus, RefreshCw, CloudUpload } from "lucide-react";
 import api from "../lib/api";
 import { ProjectsTab } from "../components/profile/ProjectsTab";
 import { ImageUpload } from "../components/common/ImageUpload";
+import { SalesforceModal } from "../components/profile/SalesforceModal";
 
 type AttributeDataType = "STRING" | "TEXT" | "IMAGE" | "NUMERIC" | "DATE" | "PERIOD" | "BOOLEAN" | "ONE_OF_MANY";
 
@@ -132,6 +133,7 @@ export function Profile() {
   const [savingStatus, setSavingStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [conflict, setConflict] = useState(false);
   const [activeTab, setActiveTab] = useState<"me" | "info" | "projects">("me");
+  const [sfOpen, setSfOpen] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -244,7 +246,7 @@ export function Profile() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{t("nav.profile")}</h1>
         
-        <div className="flex items-center space-x-2 text-sm font-medium h-6">
+        <div className="flex items-center space-x-3 text-sm font-medium h-6">
           {savingStatus === "saving" && (
             <span className="flex items-center text-sky-600 dark:text-sky-400 animate-pulse">
               <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
@@ -257,6 +259,13 @@ export function Profile() {
               {t("profile.saved")}
             </span>
           )}
+          <button
+            onClick={() => setSfOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 text-white rounded hover:bg-sky-700 font-medium transition-colors text-sm"
+          >
+            <CloudUpload className="w-4 h-4" />
+            {t("sf.button")}
+          </button>
         </div>
       </div>
 
@@ -332,6 +341,7 @@ export function Profile() {
           <ProjectsTab projects={projects} onRefresh={fetchProfile} />
         )}
       </div>
+      <SalesforceModal open={sfOpen} onClose={() => setSfOpen(false)} />
     </div>
   );
 }

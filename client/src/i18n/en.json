@@ -176,5 +176,19 @@
   "cv.publish": "Publish",
   "cv.unpublish": "Unpublish",
   "cv.publishHint": "Fill all fields to publish",
-  "cv.incomplete": "Some fields are still empty"
+  "cv.incomplete": "Some fields are still empty",
+  "common.cancel": "Cancel",
+  "common.close": "Close",
+  "sf.button": "Sync to Salesforce",
+  "sf.title": "Sync to Salesforce",
+  "sf.help": "This creates an Account with a linked Contact in Salesforce CRM using your profile details and the information below.",
+  "sf.company": "Company name",
+  "sf.phone": "Phone",
+  "sf.industry": "Industry",
+  "sf.website": "Website",
+  "sf.description": "Description",
+  "sf.sync": "Sync",
+  "sf.syncing": "Syncing...",
+  "sf.success": "Successfully created in Salesforce",
+  "sf.failed": "Sync failed"
 }

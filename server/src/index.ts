@@ -18,6 +18,7 @@ import searchRoutes from "./searchRoutes.js";
 import userRoutes from "./userRoutes.js";
 import publicProfileRoutes from "./publicProfileRoutes.js";
 import { setIo } from "./socket.js";
+import salesforceRoutes from "./salesforceRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -78,6 +79,7 @@ app.use("/api/home", homeRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/public-profile", publicProfileRoutes);
+app.use("/api/salesforce", salesforceRoutes);
 
 app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", message: "Hello from the server" });

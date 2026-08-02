@@ -204,5 +204,13 @@
   "ticket.send": "Send",
   "ticket.sending": "Sending...",
   "ticket.success": "Support ticket submitted",
-  "ticket.failed": "Failed to submit ticket"
+  "ticket.failed": "Failed to submit ticket",
+  "pos.apiToken": "Get API token",
+  "pos.copied": "Copied",
+  "pos.copy": "Copy",
+  "pos.apiHint": "External systems can use this URL to read aggregated results for this position.",
+  "pos.tokenCreated": "New token generated",
+  "pos.tokenExisting": "Existing token",
+  "pos.tokenLoading": "Generating...",
+  "pos.tokenFailed": "Failed to get token"
 }

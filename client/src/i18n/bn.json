@@ -204,5 +204,13 @@
   "ticket.send": "পাঠান",
   "ticket.sending": "পাঠানো হচ্ছে...",
   "ticket.success": "সাপোর্ট টিকিট জমা হয়েছে",
-  "ticket.failed": "টিকিট জমা দিতে ব্যর্থ"
+  "ticket.failed": "টিকিট জমা দিতে ব্যর্থ",
+  "pos.apiToken": "API টোকেন নিন",
+  "pos.copied": "কপি হয়েছে",
+  "pos.copy": "কপি",
+  "pos.apiHint": "বাহ্যিক সিস্টেম এই URL দিয়ে এই পজিশনের সমষ্টিগত ফলাফল পড়তে পারে।",
+  "pos.tokenCreated": "নতুন টোকেন তৈরি হয়েছে",
+  "pos.tokenExisting": "বিদ্যমান টোকেন",
+  "pos.tokenLoading": "তৈরি হচ্ছে...",
+  "pos.tokenFailed": "টোকেন পেতে ব্যর্থ"
 }
